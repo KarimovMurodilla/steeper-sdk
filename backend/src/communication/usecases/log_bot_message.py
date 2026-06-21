@@ -1,9 +1,14 @@
+from uuid import UUID
+
 from loggers import get_logger
 from src.communication.enums import ChatStatus, MessageType, SenderType
 from src.communication.schemas import BotMessagePayload
 from src.core.database.uow import ApplicationUnitOfWork, RepositoryProtocol
 from src.core.errors.enums import ErrorCode
-from src.core.errors.exceptions import InstanceNotFoundException
+from src.core.errors.exceptions import (
+    AccessForbiddenException,
+    InstanceNotFoundException,
+)
 from src.core.schemas import SuccessResponse
 
 logger = get_logger(__name__)
@@ -11,10 +16,14 @@ logger = get_logger(__name__)
 
 class LogBotMessageUseCase:
     """
-    Use case for processing incoming webhooks from Telegram bot or Middleware.
+    Use case for logging an outgoing bot message (from our frontend or from a
+    bot middleware acting as a proxy).
+
     It performs the following steps:
-    1. Validates the bot token hash.
-    4. Saves the Message.
+    1. Resolves the bot by ``bot_id`` and validates the secret token (the bot's
+       token hash) supplied in the request header.
+    2. Resolves the chat for the Telegram user.
+    3. Saves the Message (sender = bot).
     """
 
     def __init__(
@@ -24,29 +33,37 @@ class LogBotMessageUseCase:
         self.uow = uow
 
     async def execute(
-        self, token_hash: str, payload: BotMessagePayload
+        self, bot_id: UUID, payload: BotMessagePayload, secret_token: str
     ) -> SuccessResponse:
         """
         Executes the business logic for logging a bot message.
 
         Args:
-            token_hash (str): The security token hash of the bot.
+            bot_id (UUID): The unique identifier of the bot.
             payload (BotMessagePayload): The message payload.
+            secret_token (str): The bot's token hash, used to authenticate the
+                request (compared against ``bot.token_hash``).
 
         Returns:
             SuccessResponse: A success confirmation response.
 
         Raises:
             InstanceNotFoundException: If the bot or telegram user is not found.
+            AccessForbiddenException: If the secret token is invalid.
         """
         async with self.uow as uow:
-            bot = await uow.bots.get_by_token_hash(uow.session, token_hash)
+            bot = await uow.bots.get_single(uow.session, id=bot_id)
 
             if not bot:
-                logger.warning(
-                    "Webhook received for unknown token hash: %s", token_hash
-                )
+                logger.warning("Bot-message received for unknown bot_id: %s", bot_id)
                 raise InstanceNotFoundException(ErrorCode.BOT_NOT_FOUND)
+
+            if bot.token_hash != secret_token:
+                logger.warning(
+                    "Bot-message received with invalid secret token for bot: %s",
+                    bot_id,
+                )
+                raise AccessForbiddenException(ErrorCode.AUTH_ACCESS_FORBIDDEN)
 
             if not bot.status == "active":
                 logger.info("Webhook skipped for disabled bot: %s", bot.id)
