@@ -23,6 +23,48 @@ Production-ready FastAPI template with modular architecture, async stack, Celery
 - Prod-like: `make run`.
 - Stop: `make down`; logs: `make logs`; tests: `make test`; lint: `make lint`.
 
+## Deploy your own Steeper (published images)
+
+For self-hosting you don't have to build anything: the backend and frontend are
+published to GHCR and run via a pull-only compose file
+(`backend/infra/docker-compose.prod.yml`). Postgres/Redis/RabbitMQ stay on the
+internal network; only Nginx is exposed (port 8000).
+
+Run from the repo root:
+
+```bash
+# 1. Configure environment
+cp backend/.env.example backend/.env   # then edit: DB/Redis/RabbitMQ passwords,
+                                        # JWT secrets, super-admin credentials, ...
+
+# 2. Pull images and start the stack
+make prod-pull
+make prod-up                            # or: STEEPER_TAG=0.1.0 make prod-up
+
+# 3. First run only — migrate the DB and create the admin user
+make prod-migrate
+make prod-createsuperuser
+
+# Logs / stop
+make prod-logs
+make prod-down
+```
+
+Then open `http://<host>:8000` (operator panel) and `http://<host>:8000/docs`
+(API). Put a TLS-terminating proxy in front of port 8000 for production.
+
+Images (pin a release with `STEEPER_TAG`, default `latest`):
+- `ghcr.io/karimovmurodilla/steeper-backend`
+- `ghcr.io/karimovmurodilla/steeper-frontend`
+
+Connect a Telegram bot with the [`steeper`](https://github.com/KarimovMurodilla/steeper)
+library: register a bot to get its `bot_id`, then point the middleware's
+`base_url` at `http://<host>:8000`.
+
+> The frontend image talks to the API on its own origin (same-origin, behind the
+> bundled Nginx). To bake a different backend URL, rebuild it with
+> `--build-arg VITE_API_BASE_URL=https://api.example.com`.
+
 ## Ports
 - Nginx: 8000 → app:8001
 - App direct: 8001
