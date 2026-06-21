@@ -1,0 +1,41 @@
+from collections.abc import Callable
+from typing import Annotated
+
+from fastapi import Depends
+
+from src.core.errors.enums import ErrorCode
+from src.core.errors.exceptions import (
+    AccessForbiddenException,
+    PermissionDeniedException,
+)
+from src.user.auth.dependencies import get_current_user
+from src.user.auth.permissions.enum import PlatformPermission
+from src.user.models import User
+
+
+def require_permission(
+    required_permission: PlatformPermission,
+) -> Callable[[Annotated[User, Depends(get_current_user)]], User]:
+    """
+    Global Permission Checker.
+
+    Scope:
+    - Checks User status (active/verified).
+    - Checks Platform-level permissions (Superuser actions).
+    - Checks Self-management permissions (Profile).
+
+    Do NOT use this for resource-scoped actions; use ownership checks on those routes.
+    """
+
+    def checker(
+        current_user: Annotated[User, Depends(get_current_user)],
+    ) -> User:
+        if not current_user.is_active:
+            raise AccessForbiddenException(ErrorCode.USER_BLOCKED)
+
+        if current_user.is_superuser:
+            return current_user
+
+        raise PermissionDeniedException(ErrorCode.AUTH_PERMISSION_DENIED)
+
+    return checker

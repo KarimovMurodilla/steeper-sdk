@@ -1,0 +1,83 @@
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
+
+from src.core.limiter.depends import RateLimiter
+from src.core.schemas import TokenModel
+from src.user.auth.dependencies import (
+    get_access_by_refresh_token,
+    get_password_auth_use_case,
+    get_tokens_by_refresh_user_use_case,
+    get_user_id_from_token,
+)
+from src.user.auth.jwt_payload_schema import JWTPayload
+from src.user.auth.schemas import (
+    PasswordAuthResponse,
+    PasswordLoginRequest,
+)
+from src.user.auth.usecases.get_access_by_refresh import GetTokensByRefreshUserUseCase
+from src.user.auth.usecases.password_auth import PasswordAuthUseCase
+from src.user.models import User
+
+router = APIRouter()
+
+
+@router.post(
+    "/login/password",
+    status_code=200,
+    response_model=PasswordAuthResponse,
+    dependencies=[Depends(RateLimiter(times=10, minutes=10))],
+    responses={
+        401: {"description": "Invalid login or password"},
+        403: {"description": "User account is inactive"},
+    },
+)
+async def authenticate_via_password(
+    data: PasswordLoginRequest,
+    use_case: Annotated[PasswordAuthUseCase, Depends(get_password_auth_use_case)],
+) -> PasswordAuthResponse:
+    """
+    Authenticate with a login and password.
+    Credentials are set by an administrator; there is no self-registration endpoint.
+    """
+    return await use_case.execute(data=data)
+
+
+@router.post(
+    "/login/refresh",
+    response_model=TokenModel,
+    dependencies=[
+        Depends(  # IP-based rate limiting
+            RateLimiter(
+                times=20,
+                minutes=15,
+            )
+        ),
+        Depends(  # User-based rate limiting
+            RateLimiter(
+                times=5,
+                minutes=15,
+                identifier=get_user_id_from_token,
+            )
+        ),
+    ],
+    responses={
+        401: {"description": "Invalid or expired refresh token"},
+        403: {"description": "User account inactive or banned"},
+        404: {"description": "User not found"},
+    },
+)
+async def get_access_by_refresh(
+    user_and_payload: Annotated[
+        tuple[User, JWTPayload], Depends(get_access_by_refresh_token)
+    ],
+    use_case: Annotated[
+        GetTokensByRefreshUserUseCase, Depends(get_tokens_by_refresh_user_use_case)
+    ],
+) -> TokenModel:
+    """
+    Refresh the access token using a valid refresh token.
+    """
+    current_user, old_payload = user_and_payload
+
+    return await use_case.execute(user=current_user, old_token_payload=old_payload)

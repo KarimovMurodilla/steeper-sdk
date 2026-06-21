@@ -125,12 +125,25 @@ celerybeat-schedule-wal
 
 # Environments
 .env
+.env.*
+!.env.example
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Secrets / credentials (never commit)
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.keystore
+secrets.*
+credentials.*
+service-account*.json
 
 # Spyder project settings
 .spyderproject
@@ -164,6 +177,13 @@ cython_debug/
 .idea/
 
 # Linter cache files
+.ruff_cache/
+
+# Application logs
+logs/
+
+# Local Claude Code settings (per-developer, never shared)
+.claude/settings.local.json
 
 # TEST files
 
@@ -174,3 +194,8 @@ cython_debug/
 
 # node modules
 node_modules/
+
+# Agent rules in .agents/ are shared project conventions and ARE tracked.
+# Only ignore local/ephemeral agent state if it ever appears here:
+.agents/**/*.local
+.agents/cache/

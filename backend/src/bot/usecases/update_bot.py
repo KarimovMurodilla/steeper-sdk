@@ -1,0 +1,112 @@
+from uuid import UUID
+
+from loggers import get_logger
+from src.bot.schemas import BotUpdateRequest, BotViewModel
+from src.core.database.uow import ApplicationUnitOfWork, RepositoryProtocol
+from src.core.errors.enums import ErrorCode
+from src.core.errors.exceptions import CoreException, InstanceNotFoundException
+from src.core.utils.encryption import decrypt_token, encrypt_token
+from src.core.utils.security import hash_token
+from src.integrations.telegram.bot.telegram_bot_api import TelegramBotAPIService
+from src.main.config import config
+
+logger = get_logger(__name__)
+
+
+class UpdateBotUseCase:
+    """Use case for updating a Telegram Bot's settings."""
+
+    def __init__(
+        self,
+        uow: ApplicationUnitOfWork[RepositoryProtocol],
+        tg_service: TelegramBotAPIService,
+    ) -> None:
+        self.uow = uow
+        self.tg_service = tg_service
+
+    # async def _update_webhook(self, token_to_verify: str, result: BotViewModel) -> None:
+    #     webhook_url = f"{config.telegram.TELEGRAM_WEBHOOK_URL}/v1/communications/webhook/{result.id}"
+        # is_webhook_set = await self.tg_service.set_webhook(
+        #     token=token_to_verify,
+        #     url=webhook_url,
+        #     secret_token=hash_token(token_to_verify),
+        # )
+        # if not is_webhook_set:
+        #     logger.warning(f"Webhook update failed for bot {result.id}")
+        # else:
+        #     logger.info(f"Webhook updated successfully for bot {result.id}")
+
+    async def execute(
+        self,
+        bot_id: UUID,
+        data: BotUpdateRequest,
+    ) -> BotViewModel:
+        """
+        Executes the business logic for updating an existing Telegram Bot.
+
+        Args:
+            bot_id (UUID): The unique identifier of the bot.
+            data (BotUpdateRequest): The payload containing updated bot details.
+
+        Returns:
+            BotViewModel: The updated bot details.
+
+        Raises:
+            InstanceNotFoundException: If the bot is not found.
+            CoreException: If the new bot token is invalid.
+        """
+        async with self.uow as uow:
+            bot = await uow.bots.get_single(uow.session, id=bot_id)
+            if not bot:
+                raise InstanceNotFoundException(ErrorCode.BOT_NOT_FOUND)
+
+            update_data = data.model_dump(exclude_unset=True)
+
+            should_update_webhook = False
+            token_to_verify = data.token
+
+            if data.token:
+                bot_info = await self.tg_service.get_me(data.token)
+                if not bot_info:
+                    raise CoreException(ErrorCode.AUTH_TOKEN_INVALID)
+
+                token_hash = hash_token(data.token)
+                token_encrypted = encrypt_token(data.token)
+
+                update_data["token_hash"] = token_hash
+                update_data["token_encrypted"] = token_encrypted
+
+                update_data["name"] = bot_info.first_name
+                update_data["username"] = bot_info.username
+                del update_data["token"]
+
+                should_update_webhook = True
+
+            if update_data:
+                bot = await uow.bots.update(uow.session, update_data, id=bot_id)
+                if bot is None:
+                    raise InstanceNotFoundException(ErrorCode.BOT_NOT_FOUND)
+
+            result = BotViewModel.model_validate(bot)
+
+            telegram_api_token = (
+                data.token
+                if data.token is not None
+                else decrypt_token(bot.token_encrypted)
+            )
+
+            await uow.commit()
+
+        # if should_update_webhook and token_to_verify:
+        #     await self._update_webhook(token_to_verify, result)
+
+        await self.tg_service.set_chat_menu_button(
+            token=telegram_api_token,
+            chat_id=875587704,
+            url=f"{config.telegram.TELEGRAM_WEBHOOK_URL}?bot_id={result.id}",
+            text="Open Web App Dude haha",
+        )
+        logger.info(f"Chat menu button updated for bot {result.id}")
+
+        logger.info(f"Bot updated successfully: {result.id}")
+        return result
