@@ -195,6 +195,12 @@ logs/
 # node modules
 node_modules/
 
+# The Python "lib/" rule above is unanchored and also matches the frontend's
+# committed source directory frontend/src/lib (contains the `@/lib/*` modules) —
+# keep it tracked.
+!frontend/src/lib/
+!frontend/src/lib/**
+
 # Agent rules in .agents/ are shared project conventions and ARE tracked.
 # Only ignore local/ephemeral agent state if it ever appears here:
 .agents/**/*.local
