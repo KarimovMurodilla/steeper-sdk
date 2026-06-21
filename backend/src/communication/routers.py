@@ -48,23 +48,29 @@ async def handle_telegram_webhook(
 
 
 @router.post(
-    "/webhook/{token_hash}/bot-message",
+    "/webhook/{bot_id}/bot-message",
     status_code=status.HTTP_200_OK,
     response_model=SuccessResponse,
     responses={
         400: {"description": "Invalid payload format"},
-        403: {"description": "Invalid or expired token hash"},
+        403: {"description": "Invalid Telegram secret token"},
         404: {"description": "Bot not found"},
     },
 )
 async def log_bot_message(
-    token_hash: str,
+    bot_id: UUID,
     payload: BotMessagePayload,
     use_case: Annotated[LogBotMessageUseCase, Depends(get_log_bot_message_use_case)],
+    x_telegram_bot_api_secret_token: Annotated[str, Header()] = "",
 ) -> SuccessResponse:
     """
     Accepts data from:
     1. Our frontend.
     2. Custom Middleware (e.g., Aiogram) acting as a proxy.
+
+    The bot is identified by ``bot_id`` in the path; the secret token
+    (SHA-256 of the bot token) is supplied in the
+    ``x-telegram-bot-api-secret-token`` header — the same scheme as the
+    incoming webhook endpoint, keeping the secret out of the URL.
     """
-    return await use_case.execute(token_hash, payload)
+    return await use_case.execute(bot_id, payload, x_telegram_bot_api_secret_token)
