@@ -1,8 +1,10 @@
 # Docker settings
 COMPOSE_BASE = backend/infra/docker-compose.yml
 COMPOSE_DEV = backend/infra/docker-compose.override.yml
+COMPOSE_PROD = backend/infra/docker-compose.prod.yml
 DOCKER_COMPOSE = docker compose --env-file backend/.env -f $(COMPOSE_BASE)
 DOCKER_COMPOSE_DEV = docker compose --env-file backend/.env -f $(COMPOSE_BASE) -f $(COMPOSE_DEV)
+DOCKER_COMPOSE_PROD = docker compose --env-file backend/.env -f $(COMPOSE_PROD)
 DOCKER_COMPOSE_EXEC = $(DOCKER_COMPOSE) exec
 
 # Container names
@@ -48,6 +50,34 @@ run-fullstack:
 .PHONY: down
 down:
 	$(DOCKER_COMPOSE) down
+
+# --- Production stack on published GHCR images (pull-only, no local build) ---
+# Pin a release: `STEEPER_TAG=0.1.0 make prod-up`. Defaults to :latest.
+
+.PHONY: prod-pull
+prod-pull:
+	$(DOCKER_COMPOSE_PROD) pull
+
+.PHONY: prod-up
+prod-up:
+	$(DOCKER_COMPOSE_PROD) up -d
+
+.PHONY: prod-down
+prod-down:
+	$(DOCKER_COMPOSE_PROD) down
+
+.PHONY: prod-logs
+prod-logs:
+	$(DOCKER_COMPOSE_PROD) logs -f
+
+# First-run bootstrap: apply migrations and create the admin user.
+.PHONY: prod-migrate
+prod-migrate:
+	$(DOCKER_COMPOSE_PROD) exec $(APP_CONTAINER) alembic upgrade head
+
+.PHONY: prod-createsuperuser
+prod-createsuperuser:
+	$(DOCKER_COMPOSE_PROD) exec $(APP_CONTAINER) python -m scripts.createsuperuser
 
 .PHONY: deploy-prod
 deploy-prod:
