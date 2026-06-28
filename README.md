@@ -25,6 +25,7 @@ Docker stack.
 - [Common commands](#common-commands)
 - [CI/CD](#cicd)
 - [Documentation](#documentation)
+- [License](#license)
 
 ---
 
@@ -214,3 +215,7 @@ images to GHCR using the built-in `GITHUB_TOKEN` (no secrets to configure):
 - **Architecture & structure:** [`backend/docs/readme/architecture.md`](backend/docs/readme/architecture.md)
 - **Infrastructure & operations:** [`backend/docs/readme/infra.md`](backend/docs/readme/infra.md)
 - **Contributing & CI/CD:** [`backend/docs/readme/contributing.md`](backend/docs/readme/contributing.md)
+
+## License
+
+Released under the [MIT License](LICENSE). © 2026 KarimovMurodilla.
