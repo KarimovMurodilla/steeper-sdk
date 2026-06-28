@@ -54,12 +54,21 @@ down:
 # --- Production stack on published GHCR images (pull-only, no local build) ---
 # Pin a release: `STEEPER_TAG=0.1.0 make prod-up`. Defaults to :latest.
 
+# Build the local-only DB image (PostGIS + init scripts). It is infra, not a
+# published app image, so it must be built once on the host before prod-up.
+.PHONY: prod-build-db
+prod-build-db:
+	$(DOCKER_COMPOSE_PROD) build postgres
+
+# Pull published images. --ignore-buildable skips the postgres service (built
+# locally via prod-build-db), which otherwise fails the pull with access denied.
 .PHONY: prod-pull
 prod-pull:
-	$(DOCKER_COMPOSE_PROD) pull
+	$(DOCKER_COMPOSE_PROD) pull --ignore-buildable
 
+# Ensures the local-only DB image exists before starting the stack.
 .PHONY: prod-up
-prod-up:
+prod-up: prod-build-db
 	$(DOCKER_COMPOSE_PROD) up -d
 
 .PHONY: prod-down
