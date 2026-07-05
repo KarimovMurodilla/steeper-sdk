@@ -1,5 +1,5 @@
 from collections.abc import Awaitable, Callable
-from typing import Annotated, Any, cast
+from typing import Annotated, Any
 
 from fastapi import Request, Response
 from pydantic import Field
@@ -62,7 +62,6 @@ class RateLimiter:
             if lua_sha is None:
                 raise RuntimeError("Lua script SHA is not initialized.")
 
-            # Use cast to ensure the type is compatible with await
             eval_result = redis.evalsha(
                 lua_sha,
                 1,
@@ -70,20 +69,18 @@ class RateLimiter:
                 str(self.times),
                 str(self.milliseconds),
             )
-            result = await cast(Awaitable[Any], eval_result)
+            result = await eval_result
             return int(result)
 
         except redisExc.NoScriptError:
-            # Cast the result to Awaitable for type compatibility
             script_load_result = redis.script_load(FastAPILimiter.lua_script)
-            script_result = await cast(Awaitable[str], script_load_result)
+            script_result = await script_load_result
             FastAPILimiter.lua_sha = script_result
 
             lua_sha = FastAPILimiter.lua_sha
             if lua_sha is None:
                 raise RuntimeError("Failed to load Lua script.")
 
-            # Use cast to ensure the type is compatible with await
             eval_result = redis.evalsha(
                 lua_sha,
                 1,
@@ -91,7 +88,7 @@ class RateLimiter:
                 str(self.times),
                 str(self.milliseconds),
             )
-            result = await cast(Awaitable[Any], eval_result)
+            result = await eval_result
             return int(result)
 
         except (redisExc.ConnectionError, redisExc.RedisError) as e:

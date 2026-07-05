@@ -38,9 +38,7 @@ class BotUpdateStats(Base):
     constrained to a ``[since, until)`` window over Telegram's own timestamp.
     """
 
-    total: int = Field(
-        ..., description="Total updates in the window", examples=[5400]
-    )
+    total: int = Field(..., description="Total updates in the window", examples=[5400])
     active_users: int = Field(
         ...,
         description="Distinct Telegram users that produced any update",

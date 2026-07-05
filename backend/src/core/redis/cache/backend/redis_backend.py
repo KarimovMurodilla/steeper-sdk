@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, cast
 
 from redis import asyncio as aioredis
 
@@ -59,7 +59,7 @@ class RedisCacheBackend(CacheBackend):
             if hasattr(result, "__await__"):
                 keys = await result
                 return {self._normalize_tag_member(k) for k in keys}
-            return {self._normalize_tag_member(k) for k in result}
+            return {self._normalize_tag_member(k) for k in cast("set[Any]", result)}
         return set()
 
     async def invalidate_keys(self, keys: list[str]) -> None:

@@ -29,17 +29,17 @@ def _bootstrap_env() -> None:
 
 _bootstrap_env()
 
-import asyncio
-import getpass
-import socket
-import sys
+import asyncio  # noqa: E402
+import getpass  # noqa: E402
+import socket  # noqa: E402
+import sys  # noqa: E402
 
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError, OperationalError
+from sqlalchemy import select  # noqa: E402
+from sqlalchemy.exc import IntegrityError, OperationalError  # noqa: E402
 
-from src.core.database.session import async_session
-from src.core.utils.security import hash_password
-from src.user.models import User
+from src.core.database.session import async_session  # noqa: E402
+from src.core.utils.security import hash_password  # noqa: E402
+from src.user.models import User  # noqa: E402
 
 
 def _db_connection_hint() -> str:

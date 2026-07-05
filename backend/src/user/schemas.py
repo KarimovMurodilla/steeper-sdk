@@ -17,9 +17,7 @@ class UserProfileViewModel(Base):
     last_name: str | None = Field(
         None, description="User's last name", examples=["Doe"]
     )
-    username: str | None = Field(
-        None, description="Username", examples=["johndoe"]
-    )
+    username: str | None = Field(None, description="Username", examples=["johndoe"])
     language_code: str | None = Field(
         None, description="User's preferred language code", examples=["en"]
     )
@@ -42,9 +40,7 @@ class UserSummaryViewModel(Base):
     last_name: str | None = Field(
         None, description="User's last name", examples=["Doe"]
     )
-    username: str | None = Field(
-        None, description="Username", examples=["johndoe"]
-    )
+    username: str | None = Field(None, description="Username", examples=["johndoe"])
 
 
 class UserSummaryWithContactsViewModel(Base):
@@ -54,6 +50,4 @@ class UserSummaryWithContactsViewModel(Base):
         examples=["123e4567-e89b-12d3-a456-426614174000"],
     )
     full_name: str = Field(..., description="User's full name", examples=["John Doe"])
-    username: str | None = Field(
-        None, description="Username", examples=["johndoe"]
-    )
+    username: str | None = Field(None, description="Username", examples=["johndoe"])

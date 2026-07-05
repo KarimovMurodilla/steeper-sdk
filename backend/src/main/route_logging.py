@@ -29,7 +29,7 @@ def log_routes_summary(application: FastAPI, include_debug_list: bool = False) -
     by_tag: dict[str, int] = {}
 
     for r in custom_routes:
-        methods = getattr(r, "methods", set()) or set()
+        methods: set[str] = getattr(r, "methods", set()) or set()
         for m in methods:
             by_method[m] = by_method.get(m, 0) + 1
         tags = getattr(r, "tags", []) or []
@@ -50,5 +50,5 @@ def log_routes_summary(application: FastAPI, include_debug_list: bool = False) -
         for r in sorted(
             custom_routes, key=lambda x: (min(x.methods) if x.methods else "", x.path)
         ):
-            methods = ",".join(sorted(r.methods)) if r.methods else ""
-            logger.debug("Route: %s %s -> %s", methods, r.path, r.name)
+            method_str = ",".join(sorted(r.methods)) if r.methods else ""
+            logger.debug("Route: %s %s -> %s", method_str, r.path, r.name)

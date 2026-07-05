@@ -12,7 +12,6 @@ from src.communication.enums import (
 )
 from src.communication.schemas import TelegramUpdatePayload
 from src.communication.services.telegram_update_classifier import (
-    ClassifiedUpdate,
     classify_update,
 )
 from src.core.database.uow import ApplicationUnitOfWork, RepositoryProtocol
@@ -47,9 +46,7 @@ _CONTENT_TO_MESSAGE_TYPE: dict[ContentType, MessageType] = {
 }
 
 # Update types that we turn into Chat/Message domain objects.
-_PROCESSABLE_MESSAGE_TYPES = frozenset(
-    {UpdateType.MESSAGE, UpdateType.EDITED_MESSAGE}
-)
+_PROCESSABLE_MESSAGE_TYPES = frozenset({UpdateType.MESSAGE, UpdateType.EDITED_MESSAGE})
 
 
 class HandleWebhookUseCase:
@@ -233,7 +230,11 @@ class HandleWebhookUseCase:
                 await uow.commit()
                 return SuccessResponse(success=True)
 
-            if not process_as_message or typed_msg is None or typed_msg.from_user is None:
+            if (
+                not process_as_message
+                or typed_msg is None
+                or typed_msg.from_user is None
+            ):
                 logger.debug(
                     "Stored %s update %s; no message workflow to run",
                     classified.update_type,

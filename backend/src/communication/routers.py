@@ -42,9 +42,7 @@ async def handle_telegram_webhook(
     The full raw body is forwarded so the complete update is stored verbatim.
     """
     raw: dict[str, Any] = await request.json()
-    return await use_case.execute(
-        bot_id, payload, raw, x_telegram_bot_api_secret_token
-    )
+    return await use_case.execute(bot_id, payload, raw, x_telegram_bot_api_secret_token)
 
 
 @router.post(

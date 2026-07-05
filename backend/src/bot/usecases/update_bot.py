@@ -5,10 +5,9 @@ from src.bot.schemas import BotUpdateRequest, BotViewModel
 from src.core.database.uow import ApplicationUnitOfWork, RepositoryProtocol
 from src.core.errors.enums import ErrorCode
 from src.core.errors.exceptions import CoreException, InstanceNotFoundException
-from src.core.utils.encryption import decrypt_token, encrypt_token
+from src.core.utils.encryption import encrypt_token
 from src.core.utils.security import hash_token
 from src.integrations.telegram.bot.telegram_bot_api import TelegramBotAPIService
-from src.main.config import config
 
 logger = get_logger(__name__)
 
@@ -64,7 +63,6 @@ class UpdateBotUseCase:
                 update_data["name"] = bot_info.first_name
                 update_data["username"] = bot_info.username
                 del update_data["token"]
-
 
             if update_data:
                 bot = await uow.bots.update(uow.session, update_data, id=bot_id)

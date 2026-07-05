@@ -94,9 +94,7 @@ def upgrade() -> None:
             name=op.f("fk_telegram_updates_bot_id_bots"),
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_telegram_updates")),
-        sa.UniqueConstraint(
-            "bot_id", "update_id", name="uq_tg_update_bot_update_id"
-        ),
+        sa.UniqueConstraint("bot_id", "update_id", name="uq_tg_update_bot_update_id"),
     )
     op.create_index(
         "idx_tg_update_bot_type", "telegram_updates", ["bot_id", "update_type"]
@@ -104,9 +102,7 @@ def upgrade() -> None:
     op.create_index(
         "idx_tg_update_bot_content", "telegram_updates", ["bot_id", "content_type"]
     )
-    op.create_index(
-        "idx_tg_update_bot_date", "telegram_updates", ["bot_id", "tg_date"]
-    )
+    op.create_index("idx_tg_update_bot_date", "telegram_updates", ["bot_id", "tg_date"])
     op.create_index(
         "idx_tg_update_bot_user", "telegram_updates", ["bot_id", "tg_user_id"]
     )

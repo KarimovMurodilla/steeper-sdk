@@ -1,3 +1,4 @@
+from typing import Any
 from uuid import UUID
 
 from loggers import get_logger
@@ -33,7 +34,7 @@ class ListBroadcastsUseCase:
         Returns a paginated list of broadcasts created by the given user,
         optionally filtered by bot and status.
         """
-        filters: dict = {"created_by": user_id}
+        filters: dict[str, Any] = {"created_by": user_id}
         if bot_id is not None:
             filters["bot_id"] = bot_id
         if status is not None:

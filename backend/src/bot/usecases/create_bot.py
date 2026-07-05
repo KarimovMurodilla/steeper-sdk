@@ -8,7 +8,6 @@ from src.core.errors.exceptions import CoreException
 from src.core.utils.encryption import encrypt_token
 from src.core.utils.security import hash_token
 from src.integrations.telegram.bot.telegram_bot_api import TelegramBotAPIService
-from src.main.config import config
 
 logger = get_logger(__name__)
 

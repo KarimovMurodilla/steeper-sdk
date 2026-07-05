@@ -64,7 +64,9 @@ class GetBotUpdateStatsUseCase:
         return BotUpdateStats(
             total=sum(count for _, count in by_type),
             active_users=active_users,
-            by_type=[LabeledCount(label=label, count=count) for label, count in by_type],
+            by_type=[
+                LabeledCount(label=label, count=count) for label, count in by_type
+            ],
             by_content_type=[
                 LabeledCount(label=label, count=count) for label, count in by_content
             ],

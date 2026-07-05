@@ -17,7 +17,7 @@ events_queue = RabbitQueue(
 )
 
 
-@broker.subscriber(  # type: ignore[untyped-decorator]
+@broker.subscriber(
     queue=events_queue,
     exchange=steeper_exchange,
 )
