@@ -1,9 +1,8 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
 import { AppLayout } from "@/components/Layout/AppLayout";
 import { LoginPage } from "@/pages/LoginPage";
-import { BotsPage } from "@/pages/BotsPage";
 import { ChatPage } from "@/pages/ChatPage";
 import { BroadcastsPage } from "@/pages/BroadcastsPage";
 import { AnalyticsPage } from "@/pages/AnalyticsPage";
@@ -25,7 +24,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route element={<AppLayout />}>
-            <Route path="/" element={<BotsPage />} />
+            <Route path="/" element={<Navigate to="/chats" replace />} />
             <Route path="/chats" element={<ChatPage />} />
             <Route path="/broadcasts" element={<BroadcastsPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />

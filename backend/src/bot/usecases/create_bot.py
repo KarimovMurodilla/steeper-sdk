@@ -24,17 +24,6 @@ class CreateBotUseCase:
         self.uow = uow
         self.tg_service = tg_service
 
-    async def _set_webhook(self, token: str, bot_id: UUID) -> bool:
-        webhook_url = (
-            f"{config.telegram.TELEGRAM_WEBHOOK_URL}/v1/communications/webhook/{bot_id}"
-        )
-        token_hash = hash_token(token)
-        return await self.tg_service.set_webhook(
-            token=token,
-            url=webhook_url,
-            secret_token=token_hash,
-        )
-
     async def execute(
         self,
         data: BotCreateRequest,
@@ -75,19 +64,6 @@ class CreateBotUseCase:
             result = BotViewModel.model_validate(new_bot)
 
             await uow.commit()
-
-        is_webhook_set = await self._set_webhook(data.token, result.id)
-        if not is_webhook_set:
-            logger.warning(f"Webhook setup failed for bot {result.id}")
-        else:
-            logger.info(f"Webhook set successfully for bot {result.id}")
-
-        await self.tg_service.set_chat_menu_button(
-            token=data.token,
-            chat_id=875587704,
-            url=f"{config.telegram.TELEGRAM_WEBHOOK_URL}?bot_id={result.id}",
-            text="Open Web App Dude",
-        )
 
         logger.info(
             f"Bot created successfully: {result.id} by user {created_by_user_id}"

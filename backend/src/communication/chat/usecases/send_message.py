@@ -63,6 +63,9 @@ class SendMessageUseCase:
             InstanceNotFoundException: If the chat is not found.
             InstanceProcessingException: If the message sending fails.
         """
+        # Read phase: load the chat and extract the values we need as primitives
+        # before releasing the transaction. (expire_on_commit=False keeps the
+        # extracted ORM scalars valid, but we read them inside the block anyway.)
         async with self.uow as uow:
             chat = await uow.chats.get_single(
                 uow.session,
@@ -75,20 +78,30 @@ class SendMessageUseCase:
             if not chat:
                 raise InstanceNotFoundException(ErrorCode.CHAT_NOT_FOUND)
 
+            bot_id = chat.bot_id
             bot_token = decrypt_token(chat.bot.token_encrypted)
             tg_chat_id = chat.telegram_user.tg_user_id
 
-            message = await self.tg_bot_service.send_message(
-                token=bot_token,
-                chat_id=tg_chat_id,
-                text=data.text,
-            )
+        # Call the Telegram API OUTSIDE any DB transaction. A slow or unreachable
+        # Telegram must not hold a pooled DB connection (and an open transaction)
+        # open for the full HTTP timeout, which would exhaust the pool under load.
+        message = await self.tg_bot_service.send_message(
+            token=bot_token,
+            chat_id=tg_chat_id,
+            text=data.text,
+        )
 
-            if bool(message) and isinstance(message, Message):
-                tg_message_id = message.message_id
-            else:
-                raise InstanceProcessingException(ErrorCode.MESSAGE_SEND_FAILED)
+        if bool(message) and isinstance(message, Message):
+            tg_message_id = message.message_id
+        else:
+            raise InstanceProcessingException(ErrorCode.MESSAGE_SEND_FAILED)
 
+        # Write phase: persist the outgoing message in a separate short
+        # transaction now that the external call has returned.
+        write_uow: ApplicationUnitOfWork[RepositoryProtocol] = ApplicationUnitOfWork(
+            self.uow.session
+        )
+        async with write_uow as uow:
             new_message = await uow.messages.create(
                 uow.session,
                 {
@@ -105,7 +118,7 @@ class SendMessageUseCase:
 
             await uow.commit()
 
-        bot_id_str = str(chat.bot_id)
+        bot_id_str = str(bot_id)
         chat_id_str = str(chat_id)
 
         routing_key = f"bot.{bot_id_str}.chat.{chat_id_str}.message.created"

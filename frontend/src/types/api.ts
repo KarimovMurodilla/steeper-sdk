@@ -122,6 +122,15 @@ export interface BroadcastResponse {
   status: BroadcastStatus;
 }
 
+export interface BroadcastListItem {
+  id: string;
+  bot_id: string;
+  status: BroadcastStatus;
+  message_content: string;
+  scheduled_at?: string | null;
+  created_at: string;
+}
+
 export interface BroadcastStatsResponse {
   total: number;
   sent: number;
@@ -135,6 +144,32 @@ export interface BotAnalyticsSummary {
   chats: number;
   messages: number;
   dau: number;
+}
+
+export type TimeGranularity = "hour" | "day" | "week" | "month";
+
+export interface LabeledCount {
+  label: string;
+  count: number;
+}
+
+export interface TimeBucketCount {
+  bucket: string;
+  count: number;
+}
+
+export interface BotUpdateStats {
+  total: number;
+  active_users: number;
+  by_type: LabeledCount[];
+  by_content_type: LabeledCount[];
+  timeseries: TimeBucketCount[];
+}
+
+export interface UpdateStatsParams {
+  granularity?: TimeGranularity;
+  since?: string;
+  until?: string;
 }
 
 // ── System ──

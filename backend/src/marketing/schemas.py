@@ -61,6 +61,35 @@ class BroadcastResponse(Base):
     )
 
 
+class BroadcastListItem(Base):
+    """Single broadcast entry in the list response."""
+
+    id: UUID = Field(
+        ...,
+        description="Broadcast UUID",
+        examples=["123e4567-e89b-12d3-a456-426614174001"],
+    )
+    bot_id: UUID = Field(
+        ...,
+        description="Target bot ID",
+        examples=["123e4567-e89b-12d3-a456-426614174000"],
+    )
+    status: BroadcastStatus = Field(
+        ...,
+        description="Current status of the broadcast",
+        examples=[BroadcastStatus.DRAFT],
+    )
+    message_content: str = Field(
+        ..., description="Message text content", examples=["Special offer!"]
+    )
+    scheduled_at: datetime | None = Field(
+        None, description="Scheduled send time", examples=["2025-01-01T12:00:00Z"]
+    )
+    created_at: datetime = Field(
+        ..., description="Creation timestamp", examples=["2025-01-01T12:00:00Z"]
+    )
+
+
 class BroadcastStatsResponse(Base):
     """Response for GET /broadcasts/{id}/stats."""
 

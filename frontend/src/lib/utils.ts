@@ -48,3 +48,20 @@ export function truncate(str: string, max: number): string {
   if (str.length <= max) return str;
   return str.slice(0, max) + "…";
 }
+
+/** Compact number formatting: 1234 -> "1.2K", 2_500_000 -> "2.5M". */
+export function formatCompact(n: number): string {
+  if (n < 1000) return String(n);
+  return new Intl.NumberFormat([], {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(n);
+}
+
+/** Turn an API enum label like "callback_query" into "Callback Query". */
+export function humanizeLabel(label: string): string {
+  return label
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}

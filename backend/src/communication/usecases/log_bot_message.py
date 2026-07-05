@@ -1,3 +1,4 @@
+import time
 from uuid import UUID
 
 from loggers import get_logger
@@ -10,6 +11,10 @@ from src.core.errors.exceptions import (
     InstanceNotFoundException,
 )
 from src.core.schemas import SuccessResponse
+from src.core.utils.security import verify_secret_token
+from src.realtime.broker import broker, steeper_exchange
+from src.realtime.enums import EventType
+from src.realtime.schemas import WSChatMessageCreatedData, WSDownlinkEnvelope
 
 logger = get_logger(__name__)
 
@@ -58,7 +63,7 @@ class LogBotMessageUseCase:
                 logger.warning("Bot-message received for unknown bot_id: %s", bot_id)
                 raise InstanceNotFoundException(ErrorCode.BOT_NOT_FOUND)
 
-            if bot.token_hash != secret_token:
+            if not verify_secret_token(bot.token_hash, secret_token):
                 logger.warning(
                     "Bot-message received with invalid secret token for bot: %s",
                     bot_id,
@@ -88,7 +93,7 @@ class LogBotMessageUseCase:
                     uow.session,
                     {
                         "bot_id": bot.id,
-                        "telegram_user_id": payload.chat_id,
+                        "telegram_user_id": tg_user.id,
                         "status": ChatStatus.OPEN,
                     },
                 )
@@ -107,14 +112,53 @@ class LogBotMessageUseCase:
                 },
             }
 
-            await uow.messages.create(uow.session, msg_data)
+            new_message = await uow.messages.create(uow.session, msg_data)
 
+            await uow.session.flush()
             await uow.commit()
+
+            # Capture as primitives before leaving the transaction so the
+            # publish below never touches a detached/expired ORM instance.
+            bot_id_str = str(bot.id)
+            chat_id_str = str(chat.id)
+            message_id_str = str(new_message.id)
+
             logger.info(
                 "Processed webhook for Bot %s, User %s, Msg %s",
                 bot.id,
                 payload.chat_id,
                 payload.text,
+            )
+
+        # Broadcast the outgoing bot message so connected clients see it in
+        # real time, mirroring the incoming-webhook and admin-send paths.
+        routing_key = f"bot.{bot_id_str}.chat.{chat_id_str}.message.created"
+        message_data = WSChatMessageCreatedData(
+            message_id=message_id_str,
+            tg_message_id=payload.message_id,
+            text=payload.text,
+            sender_type=SenderType.BOT,
+        )
+        envelope = WSDownlinkEnvelope(
+            version=1,
+            event=EventType.CHAT_MESSAGE_CREATED,
+            bot_id=bot_id_str,
+            chat_id=chat_id_str,
+            timestamp=int(time.time()),
+            data=message_data.model_dump(mode="json"),
+        )
+        try:
+            await broker.publish(
+                envelope.model_dump(mode="json"),
+                routing_key=routing_key,
+                exchange=steeper_exchange,
+            )
+            logger.debug(
+                "Published %s event to %s", EventType.CHAT_MESSAGE_CREATED, routing_key
+            )
+        except Exception as e:
+            logger.exception(
+                "Failed to publish CHAT_MESSAGE_CREATED event to RabbitMQ: %s", e
             )
 
         return SuccessResponse(success=True)

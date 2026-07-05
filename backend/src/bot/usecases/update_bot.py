@@ -24,18 +24,6 @@ class UpdateBotUseCase:
         self.uow = uow
         self.tg_service = tg_service
 
-    # async def _update_webhook(self, token_to_verify: str, result: BotViewModel) -> None:
-    #     webhook_url = f"{config.telegram.TELEGRAM_WEBHOOK_URL}/v1/communications/webhook/{result.id}"
-        # is_webhook_set = await self.tg_service.set_webhook(
-        #     token=token_to_verify,
-        #     url=webhook_url,
-        #     secret_token=hash_token(token_to_verify),
-        # )
-        # if not is_webhook_set:
-        #     logger.warning(f"Webhook update failed for bot {result.id}")
-        # else:
-        #     logger.info(f"Webhook updated successfully for bot {result.id}")
-
     async def execute(
         self,
         bot_id: UUID,
@@ -62,9 +50,6 @@ class UpdateBotUseCase:
 
             update_data = data.model_dump(exclude_unset=True)
 
-            should_update_webhook = False
-            token_to_verify = data.token
-
             if data.token:
                 bot_info = await self.tg_service.get_me(data.token)
                 if not bot_info:
@@ -80,7 +65,6 @@ class UpdateBotUseCase:
                 update_data["username"] = bot_info.username
                 del update_data["token"]
 
-                should_update_webhook = True
 
             if update_data:
                 bot = await uow.bots.update(uow.session, update_data, id=bot_id)
@@ -88,25 +72,6 @@ class UpdateBotUseCase:
                     raise InstanceNotFoundException(ErrorCode.BOT_NOT_FOUND)
 
             result = BotViewModel.model_validate(bot)
-
-            telegram_api_token = (
-                data.token
-                if data.token is not None
-                else decrypt_token(bot.token_encrypted)
-            )
-
-            await uow.commit()
-
-        # if should_update_webhook and token_to_verify:
-        #     await self._update_webhook(token_to_verify, result)
-
-        await self.tg_service.set_chat_menu_button(
-            token=telegram_api_token,
-            chat_id=875587704,
-            url=f"{config.telegram.TELEGRAM_WEBHOOK_URL}?bot_id={result.id}",
-            text="Open Web App Dude haha",
-        )
-        logger.info(f"Chat menu button updated for bot {result.id}")
 
         logger.info(f"Bot updated successfully: {result.id}")
         return result

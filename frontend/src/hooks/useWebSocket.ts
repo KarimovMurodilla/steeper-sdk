@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useAuthStore } from "@/store/authStore";
+import { refreshAccessToken } from "@/api/client";
 import type { WSDownlinkEnvelope, WSUplinkMessage } from "@/types/ws";
 
 type MessageHandler = (envelope: WSDownlinkEnvelope) => void;
@@ -15,6 +16,15 @@ export function useWebSocket(onMessage: MessageHandler) {
   const reconnectDelay = useRef(RECONNECT_BASE_MS);
   const subscriptionsRef = useRef<Set<string>>(new Set());
   const mountedRef = useRef(true);
+
+  // Keep the latest handler in a ref so the socket lifecycle does not depend on
+  // its identity. Without this, the handler is recreated whenever the active
+  // chat/bot changes, which would tear down and reconnect the socket on every
+  // chat switch (dropping events and re-authenticating each time).
+  const onMessageRef = useRef(onMessage);
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+  }, [onMessage]);
 
   const getWsUrl = useCallback(() => {
     const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -37,7 +47,7 @@ export function useWebSocket(onMessage: MessageHandler) {
 
     ws.onopen = () => {
       reconnectDelay.current = RECONNECT_BASE_MS;
-      ws.send(JSON.stringify({ action: "authenticate", token }));
+      ws.send(JSON.stringify({ action: "authenticate", token: useAuthStore.getState().accessToken }));
 
       pingRef.current = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
@@ -46,9 +56,11 @@ export function useWebSocket(onMessage: MessageHandler) {
       }, PING_INTERVAL_MS);
 
       subscriptionsRef.current.forEach((key) => {
-        const [type, id] = key.split(":");
+        const sep = key.indexOf(":");
+        const type = key.slice(0, sep);
+        const id = key.slice(sep + 1);
         if (type && id) {
-          send({ action: "subscribe", [type]: id } as WSUplinkMessage);
+          ws.send(JSON.stringify({ action: "subscribe", [type]: id }));
         }
       });
     };
@@ -57,7 +69,7 @@ export function useWebSocket(onMessage: MessageHandler) {
       try {
         const data = JSON.parse(event.data as string);
         if (data.action === "pong") return;
-        onMessage(data as WSDownlinkEnvelope);
+        onMessageRef.current(data as WSDownlinkEnvelope);
       } catch {
         // ignore malformed JSON
       }
@@ -65,24 +77,32 @@ export function useWebSocket(onMessage: MessageHandler) {
 
     ws.onclose = (event) => {
       clearInterval(pingRef.current);
+      if (!mountedRef.current) return;
 
       if (event.code === 1008) {
-        useAuthStore.getState().logout();
+        // Auth was rejected (e.g. expired access token). Try a token refresh
+        // before giving up; only log out if that fails. This avoids kicking the
+        // operator out whenever the short-lived access token expires.
+        refreshAccessToken()
+          .then(() => {
+            if (mountedRef.current) connect();
+          })
+          .catch(() => {
+            useAuthStore.getState().logout();
+          });
         return;
       }
 
-      if (mountedRef.current) {
-        reconnectRef.current = setTimeout(() => {
-          reconnectDelay.current = Math.min(reconnectDelay.current * 2, RECONNECT_MAX_MS);
-          connect();
-        }, reconnectDelay.current);
-      }
+      reconnectRef.current = setTimeout(() => {
+        reconnectDelay.current = Math.min(reconnectDelay.current * 2, RECONNECT_MAX_MS);
+        connect();
+      }, reconnectDelay.current);
     };
 
     ws.onerror = () => {
       ws.close();
     };
-  }, [getWsUrl, onMessage, send]);
+  }, [getWsUrl]);
 
   const subscribe = useCallback(
     (type: "chat_id" | "bot_id", id: string) => {

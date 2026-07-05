@@ -21,7 +21,7 @@ export function AppLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-tg-bg">
+    <div className="flex h-screen overflow-hidden bg-tg-bg bg-[radial-gradient(120%_120%_at_100%_0%,rgba(82,136,193,0.10),transparent_55%)]">
       <Sidebar />
       <main className="flex-1 overflow-auto">
         <Outlet />

@@ -1,22 +1,27 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 
+from src.core.pagination import PaginatedResponse, PaginationParams
 from src.core.schemas import SuccessResponse
 from src.marketing.dependencies import (
     get_create_broadcast_use_case,
     get_get_broadcast_stats_use_case,
     get_launch_broadcast_use_case,
+    get_list_broadcasts_use_case,
 )
+from src.marketing.enums import BroadcastStatus
 from src.marketing.schemas import (
     BroadcastCreateRequest,
+    BroadcastListItem,
     BroadcastResponse,
     BroadcastStatsResponse,
 )
 from src.marketing.usecases.create_campaign import CreateBroadcastUseCase
 from src.marketing.usecases.get_campaign_stats import GetBroadcastStatsUseCase
 from src.marketing.usecases.launch_broadcast import LaunchBroadcastUseCase
+from src.marketing.usecases.list_broadcasts import ListBroadcastsUseCase
 from src.user.auth.dependencies import get_current_user
 from src.user.models import User
 
@@ -42,6 +47,33 @@ async def create_broadcast(
     If schedule_at is provided, the broadcast will be scheduled for that time.
     """
     return await use_case.execute(user_id=current_user.id, data=data)
+
+
+@router.get(
+    "/",
+    response_model=PaginatedResponse[BroadcastListItem],
+    status_code=status.HTTP_200_OK,
+    responses={
+        403: {"description": "Permission denied"},
+    },
+)
+async def list_broadcasts(
+    pagination: Annotated[PaginationParams, Depends()],
+    current_user: Annotated[User, Depends(get_current_user)],
+    use_case: Annotated[ListBroadcastsUseCase, Depends(get_list_broadcasts_use_case)],
+    bot_id: UUID | None = None,
+    status_filter: Annotated[BroadcastStatus | None, Query(alias="status")] = None,
+) -> PaginatedResponse[BroadcastListItem]:
+    """
+    Returns a paginated list of broadcasts created by the current user,
+    optionally filtered by bot and status.
+    """
+    return await use_case.execute(
+        user_id=current_user.id,
+        pagination=pagination,
+        bot_id=bot_id,
+        status=status_filter,
+    )
 
 
 @router.post(

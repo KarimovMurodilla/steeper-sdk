@@ -1,5 +1,6 @@
 import asyncio
 import hashlib
+import hmac
 import random
 
 from passlib.context import CryptContext
@@ -57,6 +58,26 @@ def hash_token(token: str) -> str:
         str: The hexadecimal SHA-256 hash string.
     """
     return hashlib.sha256(token.encode()).hexdigest()
+
+
+def verify_secret_token(expected: str, provided: str) -> bool:
+    """
+    Constant-time comparison of a bot's secret token (SHA-256 token hash).
+
+    An empty ``provided`` (e.g. a missing header) is always rejected, so a bot
+    row with a blank ``token_hash`` can never be authenticated by omitting the
+    header. ``hmac.compare_digest`` avoids leaking length/content via timing.
+
+    Args:
+        expected: The stored ``bot.token_hash``.
+        provided: The value from the ``x-telegram-bot-api-secret-token`` header.
+
+    Returns:
+        bool: True only if both are non-empty and equal.
+    """
+    if not expected or not provided:
+        return False
+    return hmac.compare_digest(expected, provided)
 
 
 def generate_otp() -> str:

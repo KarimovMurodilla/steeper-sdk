@@ -2,7 +2,9 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     Enum as SQLEnum,
+    Index,
     String,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -18,8 +20,17 @@ if TYPE_CHECKING:
 class Bot(Base, UUIDIDMixin, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "bots"
 
+    __table_args__ = (
+        Index(
+            "uq_bots_username_not_deleted",
+            "username",
+            unique=True,
+            postgresql_where=text("is_deleted = false"),
+        ),
+    )
+
     name: Mapped[str] = mapped_column(String(100))
-    username: Mapped[str] = mapped_column(String(100), unique=True)
+    username: Mapped[str] = mapped_column(String(100))
     token_hash: Mapped[str] = mapped_column(String(255))
     token_encrypted: Mapped[str] = mapped_column(String(1000))
     status: Mapped[BotStatus] = mapped_column(

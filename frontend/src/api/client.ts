@@ -18,6 +18,7 @@ apiClient.interceptors.request.use((config) => {
 });
 
 let isRefreshing = false;
+let refreshPromise: Promise<string> | null = null;
 let pendingQueue: Array<{
   resolve: (token: string) => void;
   reject: (err: unknown) => void;
@@ -32,17 +33,59 @@ function rejectPending(err: unknown) {
   pendingQueue = [];
 }
 
+/**
+ * Exchange the stored refresh token for a fresh access token, update the store,
+ * and return the new access token. Concurrent callers share a single in-flight
+ * request. Used by both the 401 response interceptor and the WebSocket hook (on
+ * a 1008 close) so the operator is not logged out when the access token expires.
+ */
+export async function refreshAccessToken(): Promise<string> {
+  if (isRefreshing && refreshPromise) return refreshPromise;
+
+  isRefreshing = true;
+  refreshPromise = (async () => {
+    const store = useAuthStore.getState();
+    const refreshToken = store.refreshToken;
+    if (!refreshToken) throw new Error("No refresh token");
+
+    const { data } = await axios.post(
+      `${API_BASE}/v1/users/auth/login/refresh`,
+      null,
+      { headers: { Authorization: refreshToken } },
+    );
+
+    const newAccess = data.access_token as string;
+    const newRefresh = data.refresh_token as string;
+    store.setTokens(newAccess, newRefresh);
+    return newAccess;
+  })();
+
+  try {
+    const token = await refreshPromise;
+    processPending(token);
+    return token;
+  } catch (err) {
+    rejectPending(err);
+    throw err;
+  } finally {
+    isRefreshing = false;
+    refreshPromise = null;
+  }
+}
+
 apiClient.interceptors.response.use(
   (res) => res,
   async (error) => {
     const original = error.config;
 
     if (error.response?.status === 401 && !original._retry) {
-      const store = useAuthStore.getState();
-
       if (original.url?.includes("/auth/login")) {
         return Promise.reject(error);
       }
+
+      // Mark before re-issuing so a replayed request that 401s again does not
+      // re-enter this branch and trigger a refresh storm.
+      original._retry = true;
 
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -56,33 +99,14 @@ apiClient.interceptors.response.use(
         });
       }
 
-      original._retry = true;
-      isRefreshing = true;
-
       try {
-        const refreshToken = store.refreshToken;
-        if (!refreshToken) throw new Error("No refresh token");
-
-        const { data } = await axios.post(
-          `${API_BASE}/v1/users/auth/login/refresh`,
-          null,
-          { headers: { Authorization: refreshToken } },
-        );
-
-        const newAccess = data.access_token as string;
-        const newRefresh = data.refresh_token as string;
-        store.setTokens(newAccess, newRefresh);
-        processPending(newAccess);
-
+        const newAccess = await refreshAccessToken();
         original.headers.Authorization = newAccess;
         return apiClient(original);
       } catch (refreshError) {
-        rejectPending(refreshError);
-        store.logout();
+        useAuthStore.getState().logout();
         window.location.href = "/login";
         return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
       }
     }
 

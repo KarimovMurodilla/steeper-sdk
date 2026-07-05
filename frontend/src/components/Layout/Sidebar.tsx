@@ -1,6 +1,5 @@
 import { NavLink } from "react-router-dom";
 import {
-  Bot,
   MessageSquare,
   Megaphone,
   BarChart3,
@@ -11,9 +10,9 @@ import { cn, displayName } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 import { useUIStore } from "@/store/uiStore";
 import { Avatar } from "@/components/ui/Avatar";
+import { BotSwitcher } from "@/components/Bot/BotSwitcher";
 
 const navItems = [
-  { to: "/", icon: Bot, label: "Bots" },
   { to: "/chats", icon: MessageSquare, label: "Chats" },
   { to: "/broadcasts", icon: Megaphone, label: "Broadcasts" },
   { to: "/analytics", icon: BarChart3, label: "Analytics" },
@@ -39,7 +38,7 @@ export function Sidebar() {
         )}
       >
         <div className="flex items-center gap-3 border-b border-white/5 px-5 py-4">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-tg-primary font-bold text-white">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-tg-accent to-tg-primary font-bold text-white shadow-lg shadow-tg-primary/20">
             S
           </div>
           <span className="text-lg font-semibold tracking-tight">Steeper</span>
@@ -65,6 +64,10 @@ export function Sidebar() {
             </NavLink>
           ))}
         </nav>
+
+        <div className="border-t border-white/5 px-3 py-3">
+          <BotSwitcher />
+        </div>
 
         {user && (
           <div className="border-t border-white/5 px-3 py-3">

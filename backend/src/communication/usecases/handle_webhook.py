@@ -22,6 +22,7 @@ from src.core.errors.exceptions import (
     InstanceNotFoundException,
 )
 from src.core.schemas import SuccessResponse
+from src.core.utils.security import verify_secret_token
 from src.realtime.broker import broker, steeper_exchange
 from src.realtime.enums import EventType
 from src.realtime.schemas import (
@@ -190,7 +191,7 @@ class HandleWebhookUseCase:
                 logger.warning("Webhook received for unknown bot_id: %s", bot_id)
                 raise InstanceNotFoundException(ErrorCode.BOT_NOT_FOUND)
 
-            if bot.token_hash != secret_token:
+            if not verify_secret_token(bot.token_hash, secret_token):
                 logger.warning(
                     "Webhook received with invalid secret token for bot: %s", bot_id
                 )

@@ -1,41 +1,27 @@
-import { useBots } from "@/hooks/useBots";
-import { useUIStore } from "@/store/uiStore";
+import { Bot } from "lucide-react";
+import { useActiveBot } from "@/hooks/useActiveBot";
 import { AnalyticsDashboard } from "@/components/Analytics/AnalyticsDashboard";
-import { Spinner } from "@/components/ui/Spinner";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export function AnalyticsPage() {
-  const { activeBotId, setActiveBotId } = useUIStore();
-  const { data, isLoading } = useBots(1, 100);
+  const { activeBotId, bots, isLoading } = useActiveBot();
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Analytics</h1>
-          <p className="text-sm text-tg-text-secondary mt-1">
-            Monitor your bot performance
-          </p>
-        </div>
-        {!isLoading && data && (
-          <select
-            value={activeBotId ?? ""}
-            onChange={(e) => setActiveBotId(e.target.value || null)}
-            className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-tg-text outline-none focus:border-tg-primary transition-colors"
-          >
-            <option value="">Select a bot...</option>
-            {data.items.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-        )}
+    <div className="mx-auto max-w-5xl p-4 sm:p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Analytics</h1>
+        <p className="mt-1 text-sm text-tg-text-secondary">
+          Insights from your Telegram updates
+        </p>
       </div>
 
-      {isLoading ? (
-        <div className="flex justify-center py-16">
-          <Spinner size="lg" />
-        </div>
+      {!isLoading && bots.length === 0 ? (
+        <EmptyState
+          icon={Bot}
+          title="No bots connected"
+          description="Add a bot from the switcher to start collecting analytics."
+          className="py-24"
+        />
       ) : (
         <AnalyticsDashboard botId={activeBotId} />
       )}

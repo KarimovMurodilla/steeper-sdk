@@ -2,13 +2,15 @@ import { useEffect, useRef, useCallback, useMemo } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUIStore } from "@/store/uiStore";
-import { useMessages } from "@/hooks/useChats";
+import { useMessages, useChatList } from "@/hooks/useChats";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { MessageBubble } from "./MessageBubble";
 import { MessageInput } from "./MessageInput";
 import { Spinner } from "@/components/ui/Spinner";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Avatar } from "@/components/ui/Avatar";
 import { MessageSquare } from "lucide-react";
+import { displayName } from "@/lib/utils";
 import type { WSDownlinkEnvelope } from "@/types/ws";
 
 export function ChatWindow() {
@@ -26,17 +28,37 @@ export function ChatWindow() {
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useMessages(activeBotId, activeChatId);
 
+  const { data: chatListData } = useChatList(activeBotId);
+  const activeChat = chatListData?.items.find(
+    (c) => c.chat_id === activeChatId,
+  );
+  const chatName = activeChat
+    ? displayName(activeChat.first_name, null, activeChat.username)
+    : "Chat";
+
   const handleWSMessage = useCallback(
     (envelope: WSDownlinkEnvelope) => {
+      if (envelope.bot_id !== activeBotId) return;
+
+      // A new chat or any new message changes the chat list (ordering / unread /
+      // a brand-new conversation appearing), so refresh it regardless of which
+      // chat is currently open.
+      if (
+        envelope.event === "chat.created" ||
+        envelope.event === "chat.message.created"
+      ) {
+        queryClient.invalidateQueries({
+          queryKey: ["chats", activeBotId],
+        });
+      }
+
+      // Only the currently open chat needs its message history refreshed.
       if (
         envelope.event === "chat.message.created" &&
         envelope.chat_id === activeChatId
       ) {
         queryClient.invalidateQueries({
           queryKey: ["messages", activeBotId, activeChatId],
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["chats", activeBotId],
         });
       }
     },
@@ -45,15 +67,24 @@ export function ChatWindow() {
 
   const { subscribe, unsubscribe } = useWebSocket(handleWSMessage);
 
+  // Subscribe to the bot for its whole lifetime (drives the chat list), not per
+  // chat — otherwise switching chats within a bot briefly unsubscribes the bot
+  // and bot-level events (e.g. chat.created) are lost.
   useEffect(() => {
-    if (!activeBotId || !activeChatId) return;
-    subscribe("chat_id", activeChatId);
+    if (!activeBotId) return;
     subscribe("bot_id", activeBotId);
     return () => {
-      unsubscribe("chat_id", activeChatId);
       unsubscribe("bot_id", activeBotId);
     };
-  }, [activeBotId, activeChatId, subscribe, unsubscribe]);
+  }, [activeBotId, subscribe, unsubscribe]);
+
+  useEffect(() => {
+    if (!activeChatId) return;
+    subscribe("chat_id", activeChatId);
+    return () => {
+      unsubscribe("chat_id", activeChatId);
+    };
+  }, [activeChatId, subscribe, unsubscribe]);
 
   const messages = useMemo(
     () =>
@@ -101,9 +132,14 @@ export function ChatWindow() {
         >
           <ArrowLeft size={20} />
         </button>
-        <div className="flex-1">
-          <h3 className="text-sm font-semibold">Chat</h3>
-          <p className="text-xs text-tg-text-muted">{activeChatId}</p>
+        <Avatar name={chatName} size="sm" />
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate text-sm font-semibold">{chatName}</h3>
+          {activeChat?.username && (
+            <p className="truncate text-xs text-tg-text-muted">
+              @{activeChat.username}
+            </p>
+          )}
         </div>
       </div>
 
