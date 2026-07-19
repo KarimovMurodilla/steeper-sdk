@@ -2,23 +2,34 @@
 
 ## How to Contribute
 1. Fork and branch: `git checkout -b feature/your-feature`.
-2. Follow typing, linters.
-3. Run checks: `make lint`, `make test`.
+2. Follow the project's typing and lint rules (mypy strict, ruff, black).
+3. Run checks locally: `make lint` and `make test`.
 4. Commit and open a PR with a clear description.
 
-## CI/CD Pipelines (GitHub Actions)
+### Coding conventions
+Module-level conventions are captured as short rules under
+[`backend/.agents/rules/`](../../.agents/rules/) and are worth reading before a
+first contribution:
+- Keep router bodies thin — delegate to use cases.
+- Always use the Unit of Work inside use cases.
+- Implement schemas in `schemas.py` and DI factories in `dependencies.py`.
+- Import modules at the top of the file; don't create redundant use cases.
 
-### CI (`.github/workflows/ci.yml`)
-- Caching: venv by `infra/requirements.txt` hash, pre-commit, deps.
-- Quality: `make check-lint`, Alembic head check.
-- Tests: generates `.env` from example and runs `make test`.
+## CI/CD (GitHub Actions)
 
-### CD (`.github/workflows/deploy.yml`)
-- Deploys from `main` after successful CI.
-- Runs `check_env.py`, deploys via `make deploy-prod`, cleans resources, restarts nginx.
-- Notifications: Telegram with status, duration, pipeline link.
+### Publish images (`.github/workflows/docker-publish.yml`)
+The single workflow builds and pushes the backend and frontend images to GHCR
+using the built-in `GITHUB_TOKEN` (no secrets to configure):
 
-### Required Secrets
-- SSH_PRIVATE_KEY, SERVER_IP, SSH_USER — server access.
-- ALERT_BOT_TOKEN, ALERT_CHAT_ID — Telegram notifications.
-- Production `.env` must exist on the target server.
+- Push a `vX.Y.Z` tag → publishes `X.Y.Z`, `X.Y`, and `latest` (release images).
+- Push to `main` → publishes `main` and `sha-<short>` (rolling images).
+
+Published images:
+- `ghcr.io/karimovmurodilla/steeper-backend`
+- `ghcr.io/karimovmurodilla/steeper-frontend`
+
+### Deploying published images
+Deployment is pull-only via `infra/docker-compose.prod.yml` and the `prod-*`
+Make targets — see [infra.md](infra.md) and the
+[backend README](../../README.md#deploy-your-own-steeper-published-images).
+</content>

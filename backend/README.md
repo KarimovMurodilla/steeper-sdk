@@ -1,34 +1,92 @@
-# FastAPI Template
+# Steeper — Backend
 
-Production-ready FastAPI template with modular architecture, async stack, Celery, and full Docker setup.
+Async **FastAPI** backend for the [Steeper](../README.md) Telegram bot operations
+platform: register bots, ingest Telegram webhooks, run a live operator chat over
+WebSockets, dispatch broadcasts, and expose analytics — all behind a modular
+domain architecture with a full Docker stack.
 
 ## Key Features
-- Async FastAPI with modular domain structure.
-- DB via SQLAlchemy async, repositories + Unit of Work for transactional work.
-- Caching: Redis cache layer (`src/core/redis/*`) with tags, decorators, lifecycle helpers.
-- Rate limiting: limiter package (`src/core/limiter`) with FastAPI dependencies (both IP and user-based).
-- Messaging: Celery workers/beat + RabbitMQ broker, Flower monitoring UI.
-- Edge: Nginx reverse proxy with WebSocket upgrade headers.
-- Email service: templated mailer with Celery tasks for async sending.
-- Auth & JWT: user module with auth usecases, tokens, permissions.
-- Storage: async S3 adapter (`src/core/storage/s3`) with presign support.
-- Observability/resilience: structured logging (loggers), retry utils, health route.
-- Type safety: mypy in strict mode; strict settings (no implicit Optional, no untyped defs, disallow Any in generics) keep interfaces honest and catch regressions early.
-- Tooling: pre-commit/ruff/black/mypy, pytest (asyncio), Alembic migrations.
+
+- **Modular domain structure** — each domain (`bot`, `communication`,
+  `marketing`, `crm`, `analytics`, `realtime`, `user`, `integrations/telegram`)
+  is a self-contained package with its own routers, services, use cases, and
+  repositories.
+- **Async data layer** — SQLAlchemy (async) with a repository + Unit of Work
+  pattern for transactional work.
+- **Caching** — Redis cache layer (`src/core/redis/*`) with tags, decorators,
+  and lifecycle helpers.
+- **Rate limiting** — limiter package (`src/core/limiter`) exposing FastAPI
+  dependencies (both IP- and user-based).
+- **Background work** — Celery workers/beat on a RabbitMQ broker, with Flower
+  as the monitoring UI (used for broadcasts and email).
+- **Realtime** — WebSocket gateway (`src/realtime`) fanning RabbitMQ events out
+  to connected operators.
+- **Telegram integration** — webhook ingestion and an async Telegram Bot API
+  client (`src/integrations/telegram`).
+- **Auth & JWT** — operator login with password + refresh tokens and a
+  permissions system (`src/user/auth`).
+- **Email** — templated mailer with Celery tasks for async sending.
+- **Storage** — async S3 adapter (`src/core/storage/s3`) with presigned URLs.
+- **i18n** — translatable error messages (`src/core/i18n`).
+- **Observability** — structured logging, retry utilities, health route,
+  optional Sentry.
+- **Type safety** — mypy in strict mode (no implicit Optional, no untyped
+  defs, no `Any` in generics).
+- **Tooling** — pre-commit / ruff / black / mypy, pytest (asyncio), Alembic.
+
+## API Surface
+
+All application routes are versioned under `/v1`; system routes sit at the root.
+
+| Tag            | Method & path                                        | Purpose |
+|----------------|------------------------------------------------------|---------|
+| Users          | `POST /v1/users/auth/login/password`                 | Password login (returns JWT access + refresh) |
+| Users          | `POST /v1/users/auth/login/refresh`                  | Exchange a refresh token for a new access token |
+| Users          | `GET  /v1/users/me`                                  | Current operator profile |
+| Users          | `GET  /v1/users/{user_id}`                           | Fetch an operator by id |
+| Bots           | `POST /v1/bots/`                                      | Register a bot |
+| Bots           | `GET  /v1/bots/`                                      | List bots |
+| Bots           | `PATCH /v1/bots/{bot_id}`                             | Update a bot |
+| Bots           | `DELETE /v1/bots/{bot_id}`                            | Remove a bot |
+| Communications | `POST /v1/communications/webhook/{bot_id}`           | Telegram webhook ingestion |
+| Communications | `POST /v1/communications/webhook/{bot_id}/bot-message` | Record an outbound bot message |
+| Chats          | `GET  /v1/bots/{bot_id}/chats`                        | List chats for a bot |
+| Chats          | `GET  /v1/bots/{bot_id}/chats/{chat_id}/messages`    | List messages in a chat |
+| Chats          | `POST /v1/bots/{bot_id}/chats/{chat_id}/messages`    | Operator sends a message |
+| Analytics      | `GET  /v1/bots/{bot_id}/analytics/summary`           | Aggregate metrics |
+| Analytics      | `GET  /v1/bots/{bot_id}/analytics/updates`           | Update volume over time |
+| Broadcasts     | `POST /v1/broadcasts/`                                | Create a broadcast |
+| Broadcasts     | `GET  /v1/broadcasts/`                                | List broadcasts |
+| Broadcasts     | `POST /v1/broadcasts/{broadcast_id}/send`            | Dispatch a broadcast (background) |
+| Broadcasts     | `GET  /v1/broadcasts/{broadcast_id}/stats`           | Delivery stats |
+| WebSocket      | `WS   /v1/ws`                                         | Realtime operator stream |
+| System         | `GET/HEAD /health/`                                  | Health check |
+| System         | `GET  /time/`                                         | Server time |
+
+Interactive schema: `http://localhost:8000/docs` (or `http://localhost:8001/docs`
+to bypass Nginx).
 
 ## Quick Start
-- Install Docker and Docker Compose, Python 3.12 (for local scripts/hooks).
-- Copy env: `cp .env.example .env` and fill required values. For tests you can also use `.env.test` (picked up when `TESTING=true` in env).
+
+- Install Docker and Docker Compose (Python 3.12 only needed for local
+  scripts/hooks).
+- Copy env: `cp .env.example .env` and fill required values. For tests you can
+  also use `.env.test` (picked up when `TESTING=true` in env).
 - Dev with reload: `make run-dev` (Nginx on 8000, app on 8001).
 - Prod-like: `make run`.
+- First run: `make migrate` then `make createsuperuser`.
 - Stop: `make down`; logs: `make logs`; tests: `make test`; lint: `make lint`.
+
+> Make targets shown here are the backend targets. From the repository root the
+> top-level `Makefile` also provides full-stack targets such as
+> `make run-fullstack-dev`. See the [root README](../README.md).
 
 ## Deploy your own Steeper (published images)
 
 For self-hosting you don't have to build anything: the backend and frontend are
 published to GHCR and run via a pull-only compose file
-(`backend/infra/docker-compose.prod.yml`). Postgres/Redis/RabbitMQ stay on the
-internal network; only Nginx is exposed (port 8000).
+(`infra/docker-compose.prod.yml`). Postgres/Redis/RabbitMQ stay on the internal
+network; only Nginx is exposed (port 8000).
 
 Run from the repo root:
 
@@ -82,6 +140,7 @@ library: register a bot to get its `bot_id`, then point the middleware's
 - `make run-dev` — build+up with override (reload)
 - `make run` — build+up prod-like
 - `make migrate` / `make migration` — apply/create Alembic revisions
+- `make createsuperuser` — bootstrap the super-admin operator
 - `make logs` / `make logs-app` — view logs
 - `make clean` — remove containers/volumes/images/orphans
 - `make lint` / `make test` — quality checks
@@ -93,6 +152,8 @@ library: register a bot to get its `bot_id`, then point the middleware's
 - Run all hooks locally: `pre-commit run --all-files` or `make lint`
 
 ## Documentation
-- Architecture & structure: [docs/readme/architecture.md](https://github.com/darkweid/fastapi-template/blob/main/docs/readme/architecture.md)
-- Infrastructure & ops: [docs/readme/infra.md](https://github.com/darkweid/fastapi-template/blob/main/docs/readme/infra.md)
-- Contributing & CI/CD: [docs/readme/contributing.md](https://github.com/darkweid/fastapi-template/blob/main/docs/readme/contributing.md)
+- Architecture & structure: [docs/readme/architecture.md](docs/readme/architecture.md)
+- Infrastructure & ops: [docs/readme/infra.md](docs/readme/infra.md)
+- Contributing & CI/CD: [docs/readme/contributing.md](docs/readme/contributing.md)
+</content>
+</invoke>

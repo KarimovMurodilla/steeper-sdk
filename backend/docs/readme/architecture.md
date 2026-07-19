@@ -50,6 +50,42 @@ Benefits:
 - All DB work goes through repositories; no direct SQL in usecases/services/routers.
 - Prefer base repository methods (e.g., `get_single`) before adding custom queries; if the same filters/settings are reused 2–3 times or more, extract them into a custom repository method.
 - Keep repositories focused on data access; put orchestration and business logic in usecases/services.
+
+### Module Anatomy
+Each domain module is a self-contained package. A typical module contains:
+- `routers.py` — thin FastAPI routes (delegate to use cases, no business logic).
+- `schemas.py` — Pydantic request/response models.
+- `models.py` — SQLAlchemy ORM models.
+- `repositories/` (or `repositories.py`) — data access.
+- `services/` — single-module domain rules.
+- `usecases/` — scenario orchestration across repositories/services and external ports.
+- `dependencies.py` — DI factories wiring services/use cases.
+- `tasks.py` — Celery tasks owned by the module (where applicable).
+
+---
+## Domain Modules
+The application is split into the following domains, all registered under the
+`/v1` prefix in `src/main/presentation.py` (system routes sit at the root):
+
+- **`user/`** — operators and authentication. `auth/` holds JWT password login,
+  refresh tokens (see `auth/REFRESH_TOKEN_IMPLEMENTATION.md`), and a permissions
+  system. Endpoints: login, refresh, current user, get user by id.
+- **`bot/`** — registry of Telegram bots (`Bot` model). CRUD endpoints:
+  create, list, update, delete.
+- **`communication/`** — Telegram ingestion. Webhook endpoints persist raw
+  `TelegramUpdate`s and derive `Chat`, `Message`, and `TelegramUser` records.
+  The `chat/` subpackage backs the operator chat (list chats, list messages,
+  send a message).
+- **`marketing/`** — broadcasts. Create/list broadcasts, dispatch them via
+  background workers, and read delivery stats (`Broadcast`, `BroadcastDelivery`).
+- **`analytics/`** — per-bot aggregate metrics and update-volume time series.
+- **`crm/`** — customer records (`TelegramUser`) backing conversations.
+- **`realtime/`** — WebSocket gateway (`/v1/ws`). Each gateway instance binds an
+  exclusive RabbitMQ queue and fans platform events out to connected operators.
+- **`integrations/telegram/`** — async Telegram Bot API client used to send
+  outbound messages and manage bots.
+- **`system/`** — infrastructure routes: health check and server time.
+
 ---
 ## Project Layout
 ```
@@ -88,9 +124,11 @@ Benefits:
 │   ├── core/                            # Core components shared across the application
 │   │   ├── database/                    # Database connection and ORM setup
 │   │   ├── email_service/               # Email service functionality
-│   │   ├── errors/                      # Error handling
+│   │   ├── errors/                      # Exceptions and handlers
+│   │   ├── i18n/                         # Translatable error messages
 │   │   ├── limiter/                     # Rate limiting functionality
-│   │   ├── patterns/                    # Design patterns
+│   │   ├── pagination/                  # Pagination helpers
+│   │   ├── patterns/                    # Shared design patterns
 │   │   ├── redis/                       # Redis caching system + limiter init
 │   │   ├── storage/                     # Storage adapters (S3)
 │   │   ├── utils/                       # Utility functions
@@ -106,19 +144,26 @@ Benefits:
 │   │   ├── route_logging.py             # Utility for logging routes summary
 │   │   └── web.py                       # FastAPI application setup
 │   │
-│   ├── system/                          # System-level functionality
-│   │   └── routers.py                   # System API endpoints (health, time)
+│   ├── user/                            # Operators, auth (JWT + refresh), permissions
+│   │   ├── auth/                        # Login, refresh tokens, permissions
+│   │   ├── dependencies.py              # DI factories
+│   │   ├── models.py                    # ORM models
+│   │   ├── repositories.py              # Data access
+│   │   ├── routers.py                   # API endpoints
+│   │   ├── schemas.py                   # Pydantic schemas
+│   │   ├── services.py                  # Domain services
+│   │   ├── tasks.py                     # Celery tasks
+│   │   └── usecases/                    # Use cases
 │   │
-│   └── user/                            # User functionality
-│       ├── auth/                        # Authentication logic for regular users
-│       ├── dependencies.py              # User dependencies
-│       ├── models.py                    # User data models (ORM)
-│       ├── repositories.py              # User data repository layer
-│       ├── routers.py                   # User API endpoints
-│       ├── schemas.py                   # User Pydantic schemas
-│       ├── services.py                  # User business logic services
-│       ├── tasks.py                     # Celery tasks for users
-│       └── usecases/                    # User-related use cases
+│   ├── bot/                             # Telegram bot registry (CRUD)
+│   ├── communication/                   # Webhook ingestion + operator chat (chat/)
+│   ├── marketing/                       # Broadcasts and delivery tracking
+│   ├── analytics/                       # Per-bot analytics endpoints
+│   ├── crm/                             # Customer (Telegram user) records
+│   ├── realtime/                        # WebSocket gateway + RabbitMQ consumers
+│   ├── integrations/                    # External integrations
+│   │   └── telegram/                    # Async Telegram Bot API client
+│   └── system/                          # Health and time routes
 │
 ├── tests/                               # Test suite
 │   ├── auth/                            # Auth tests
