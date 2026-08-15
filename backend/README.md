@@ -8,8 +8,8 @@ domain architecture with a full Docker stack.
 ## Key Features
 
 - **Modular domain structure** — each domain (`bot`, `communication`,
-  `marketing`, `crm`, `analytics`, `realtime`, `user`, `integrations/telegram`)
-  is a self-contained package with its own routers, services, use cases, and
+  `marketing`, `crm`, `analytics`, `realtime`, `user`, `system`,
+  `integrations/telegram`) is a self-contained package with its own routers, services, use cases, and
   repositories.
 - **Async data layer** — SQLAlchemy (async) with a repository + Unit of Work
   pattern for transactional work.
@@ -116,20 +116,33 @@ Images (pin a release with `STEEPER_TAG`, default `latest`):
 - `ghcr.io/karimovmurodilla/steeper-frontend`
 
 Connect a Telegram bot with the [`steeper`](https://github.com/KarimovMurodilla/steeper)
-library: register a bot to get its `bot_id`, then point the middleware's
-`base_url` at `http://<host>:8000`.
+library: add a bot in the operator panel's sidebar switcher (or via
+`POST /v1/bots/`) to get its `bot_id`, then point the middleware's `base_url` at
+`http://<host>:8000`.
 
 > The frontend image talks to the API on its own origin (same-origin, behind the
 > bundled Nginx). To bake a different backend URL, rebuild it with
 > `--build-arg VITE_API_BASE_URL=https://api.example.com`.
 
 ## Ports
-- Nginx: 8000 → app:8001
-- App direct: 8001
-- Postgres: 5432
-- Redis: 6379
-- RabbitMQ: 5672 (AMQP), 15672 (UI)
+
+Dev stack (`infra/docker-compose.yml`). Ports marked *(env)* are host ports read
+from `.env`; the values below are the `.env.example` defaults.
+
+- Nginx: 8000, proxies to app:8001
+- App direct: 8001 *(env: `APP_BACKEND_PORT`)*
+- Frontend: 3000 (container port 80)
+- Postgres: 5432 *(env: `POSTGRES_PORT`)*
+- Redis: 6379 *(env: `REDIS_PORT`)*
+- RabbitMQ: 5672 *(env: `RABBITMQ_PORT`)* (AMQP), 15672 (UI)
 - Flower: 5555
+
+In `infra/docker-compose.prod.yml` only Nginx publishes a port (8000);
+everything else stays on the internal `steeper-network`.
+
+Postgres runs from a locally built image (`infra/postgres/Dockerfile`):
+PostgreSQL 18 plus a custom `postgresql.conf` and a first-boot script that
+creates the `pg_stat_statements` extension.
 
 ## Common Services
 - API docs: http://localhost:8000/docs (or http://localhost:8001/docs directly)
@@ -155,5 +168,3 @@ library: register a bot to get its `bot_id`, then point the middleware's
 - Architecture & structure: [docs/readme/architecture.md](docs/readme/architecture.md)
 - Infrastructure & ops: [docs/readme/infra.md](docs/readme/infra.md)
 - Contributing & CI/CD: [docs/readme/contributing.md](docs/readme/contributing.md)
-</content>
-</invoke>

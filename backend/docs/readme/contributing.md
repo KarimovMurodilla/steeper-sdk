@@ -32,4 +32,3 @@ Published images:
 Deployment is pull-only via `infra/docker-compose.prod.yml` and the `prod-*`
 Make targets — see [infra.md](infra.md) and the
 [backend README](../../README.md#deploy-your-own-steeper-published-images).
-</content>

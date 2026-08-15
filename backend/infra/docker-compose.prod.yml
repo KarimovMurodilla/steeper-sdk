@@ -25,12 +25,12 @@ x-backend: &backend
 services:
   postgres:
     container_name: steeper-postgres
-    # The DB image is built once from the repo (PostGIS + init scripts); it is
-    # infra, not part of the published app images.
+    # The DB image is built once from the repo (custom config + init scripts);
+    # it is infra, not part of the published app images.
     build:
       context: ..
-      dockerfile: infra/postgres/Dockerfile-postgis
-    image: steeper-postgres-postgis:18
+      dockerfile: infra/postgres/Dockerfile
+    image: steeper-postgres:18
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
