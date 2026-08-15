@@ -32,7 +32,7 @@ Docker stack.
 ## What you get
 
 - **Bot management** — register, update, and remove multiple Telegram bots from
-  one place.
+  a global switcher, modelled on Telegram's own account-switching sheet.
 - **Live operator chat** — Telegram webhooks land in the platform; operators
   reply in real time over WebSockets.
 - **Broadcasts** — compose and dispatch mass messages to your audience via
@@ -48,26 +48,28 @@ This is a monorepo containing two deployable apps that ship as separate Docker
 images and run together behind a single Nginx reverse proxy.
 
 ```
-                          ┌─────────────────────────────┐
-   Telegram  ───webhook──▶│  Nginx (:8000)              │
-   (steeper lib)          │   ├── / ............ frontend (operator panel)
-                          │   ├── /api ......... backend (FastAPI :8001)
-   Operator browser ─────▶│   └── /ws .......... realtime (WebSockets)
-                          └──────────────┬──────────────┘
+                          ┌──────────────────────────────────────────┐
+   Telegram  ───webhook──▶│  Nginx (:8000)                           │
+   (steeper lib)          │   ├── /v1 ............ backend API + WebSockets
+                          │   ├── /docs, /health . backend (FastAPI :8001)
+   Operator browser ─────▶│   └── / .............. frontend (operator panel)
+                          └──────────────┬───────────────────────────┘
                                          │
         ┌──────────────┬────────────────┼──────────────┬──────────────┐
      Postgres        Redis           RabbitMQ        Celery          Flower
-   (PostGIS)      (cache/limiter)    (broker)    (worker + beat)   (monitoring)
+   (data)         (cache/limiter)    (broker)    (worker + beat)   (monitoring)
 ```
 
 - **`backend/`** — async FastAPI app with a modular domain structure
   (`bot`, `communication`, `marketing`, `crm`, `analytics`, `realtime`,
-  `user`, `integrations/telegram`). Uses SQLAlchemy (async) with a Unit of Work
-  pattern, Redis caching/rate-limiting, Celery + RabbitMQ for background work,
+  `user`, `system`, `core`, `integrations/telegram`). Uses SQLAlchemy (async)
+  with a Unit of Work pattern, Redis caching/rate-limiting, Celery + RabbitMQ for background work,
   and an async S3 storage adapter.
 - **`frontend/`** — React 19 + Vite + TypeScript operator panel
-  (TanStack Query, Zustand, Tailwind, React Router). Pages: **Bots**, **Chats**,
-  **Broadcasts**, **Analytics**, and **Login**.
+  (TanStack Query, Zustand, Tailwind, React Router). Pages: **Chats**,
+  **Broadcasts**, **Analytics**, and **Login**. Bots have no page of their own —
+  adding, selecting, and managing them happens in the sidebar bot switcher,
+  available everywhere in the panel.
 
 ## Tech stack
 
@@ -75,7 +77,7 @@ images and run together behind a single Nginx reverse proxy.
 |--------------|--------------|
 | Backend      | FastAPI, SQLAlchemy (async), Alembic, Pydantic |
 | Frontend     | React 19, Vite 6, TypeScript, TanStack Query, Zustand, Tailwind CSS |
-| Data         | PostgreSQL (PostGIS), Redis |
+| Data         | PostgreSQL 18, Redis |
 | Async / jobs | Celery, RabbitMQ, Flower |
 | Edge         | Nginx (reverse proxy + WebSocket upgrade) |
 | Storage      | S3-compatible object storage (presigned URLs) |
@@ -135,6 +137,10 @@ GHCR and run via a pull-only compose file
 (`backend/infra/docker-compose.prod.yml`). Postgres / Redis / RabbitMQ stay on
 the internal network; only Nginx is exposed on port 8000.
 
+The one image built on the host is Postgres (`backend/infra/postgres/Dockerfile`
+— PostgreSQL 18 plus a custom config and `pg_stat_statements`); `make prod-up`
+takes care of that build for you.
+
 ```bash
 # 1. Configure environment
 cp backend/.env.example backend/.env   # edit credentials, secrets, admin user
@@ -166,7 +172,9 @@ Images (pin a release with `STEEPER_TAG`, default `latest`):
 
 ## Connecting a Telegram bot
 
-1. Register a bot in the operator panel (or via the API) to obtain its `bot_id`.
+1. Add a bot in the operator panel's sidebar switcher (**Add Bot** → paste the
+   @BotFather token), or via the API. Click its ID in the switcher to copy the
+   `bot_id`.
 2. In your bot built with the [`steeper`](https://github.com/KarimovMurodilla/steeper)
    library, point the middleware's `base_url` at `http://<host>:8000`.
 3. Incoming Telegram updates are forwarded to the platform's webhook endpoint,
@@ -174,14 +182,22 @@ Images (pin a release with `STEEPER_TAG`, default `latest`):
 
 ## Services & ports
 
-| Service   | Port           | Notes                          |
-|-----------|----------------|--------------------------------|
-| Nginx     | 8000           | Public entrypoint → app:8001   |
-| App       | 8001           | FastAPI (direct, bypass Nginx) |
-| Postgres  | 5432           | PostGIS                        |
-| Redis     | 6379           | Cache / rate limiter           |
-| RabbitMQ  | 5672 / 15672   | AMQP / management UI           |
-| Flower    | 5555           | Celery monitoring              |
+Dev stack (`docker-compose.yml`). Host ports marked *(env)* come from
+`backend/.env` — the values below are the defaults suggested in `.env.example`.
+
+| Service   | Host port          | Notes                                    |
+|-----------|--------------------|------------------------------------------|
+| Nginx     | 8000               | Public entrypoint, proxies to app:8001   |
+| App       | 8001 *(env)*       | `APP_BACKEND_PORT`, direct, bypass Nginx |
+| Frontend  | 3000               | Vite build served by Nginx, container :80 |
+| Postgres  | 5432 *(env)*       | `POSTGRES_PORT`                          |
+| Redis     | 6379 *(env)*       | `REDIS_PORT`, cache / rate limiter       |
+| RabbitMQ  | 5672 *(env)* / 15672 | `RABBITMQ_PORT` (AMQP) / management UI |
+| Flower    | 5555               | Celery monitoring                        |
+
+In production (`docker-compose.prod.yml`) only Nginx publishes a port (8000).
+Postgres, Redis, RabbitMQ, the app, and Flower stay on the internal network —
+uncomment the `ports` mapping on the `flower` service if you need its UI.
 
 ## Common commands
 

@@ -54,7 +54,7 @@ down:
 # --- Production stack on published GHCR images (pull-only, no local build) ---
 # Pin a release: `STEEPER_TAG=0.1.0 make prod-up`. Defaults to :latest.
 
-# Build the local-only DB image (PostGIS + init scripts). It is infra, not a
+# Build the local-only DB image (custom config + init scripts). It is infra, not a
 # published app image, so it must be built once on the host before prod-up.
 .PHONY: prod-build-db
 prod-build-db:

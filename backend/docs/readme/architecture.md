@@ -20,6 +20,7 @@ Implementations:
 - `lifespan.py`: startup/shutdown lifecycle (init/cleanup external resources).
 - `presentation.py`: API assembly, versioning, exception handlers.
 - `route_logging.py`: logs routes grouped by method/tag for debugging.
+- `sentry.py`: optional Sentry initialization, gated by `SENTRY_ENABLED`.
 - `web.py`: FastAPI app factory with middleware, CORS, Sentry, routers.
 
 Benefits:
@@ -95,13 +96,15 @@ The application is split into the following domains, all registered under the
 │   │   └── Dockerfile.dev               # Development Dockerfile with hot-reload
 │   ├── docker-compose.override.yml      # Docker Compose overrides for development
 │   ├── docker-compose.yml               # Docker Compose configuration
+│   ├── docker-compose.prod.yml          # Pull-only stack on published GHCR images
 │   ├── nginx/                           # Nginx configuration
 │   │   ├── app.conf                     # App reverse-proxy config
 │   │   ├── main.conf                    # Shared proxy settings (upgrade headers, etc.)
 │   │   └── dev-nginx.conf               # Dev-only reverse-proxy config
 │   ├── postgres/                        # PostgreSQL configuration
-│   │   ├── Dockerfile-postgis           # Dockerfile for PostgreSQL with PostGIS
-│   │   ├── init-postgis.sh              # Initialization script
+│   │   ├── Dockerfile                   # Dockerfile for PostgreSQL
+│   │   ├── init-extensions.sh           # Creates pg_stat_statements on first boot
+│   │   ├── setup-config.sh              # Installs the custom config on first boot
 │   │   └── postgresql.conf              # PostgreSQL configuration
 │   ├── redis.conf                       # Redis configuration
 │   ├── requirements/                    # Python dependencies for different environments
@@ -118,7 +121,8 @@ The application is split into the following domains, all registered under the
 │
 ├── scripts/                             # Utility scripts for the application
 │   ├── __init__.py                      # Package initialization
-│   └── check_env.py                     # Environment validation script
+│   ├── check_env.py                     # Environment validation script
+│   └── createsuperuser.py               # Bootstraps the super-admin operator
 │
 ├── src/                                 # Application source code
 │   ├── core/                            # Core components shared across the application
@@ -142,6 +146,7 @@ The application is split into the following domains, all registered under the
 │   │   ├── lifespan.py                  # Application lifecycle management
 │   │   ├── presentation.py              # API presentation layer
 │   │   ├── route_logging.py             # Utility for logging routes summary
+│   │   ├── sentry.py                    # Optional Sentry initialization
 │   │   └── web.py                       # FastAPI application setup
 │   │
 │   ├── user/                            # Operators, auth (JWT + refresh), permissions
