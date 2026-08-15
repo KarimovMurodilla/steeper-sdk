@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useBots } from "./useBots";
 import { useUIStore } from "@/store/uiStore";
 
@@ -10,7 +10,7 @@ import { useUIStore } from "@/store/uiStore";
 export function useActiveBot() {
   const { activeBotId, setActiveBotId } = useUIStore();
   const { data, isLoading } = useBots(1, 100);
-  const bots = data?.items ?? [];
+  const bots = useMemo(() => data?.items ?? [], [data]);
 
   useEffect(() => {
     if (isLoading) return;
