@@ -38,7 +38,9 @@ Docker stack.
 - **Broadcasts** — compose and dispatch mass messages to your audience via
   background workers.
 - **Analytics** — track usage and messaging activity.
-- **CRM** — customer records backing the conversations.
+- **Audience records** — every Telegram user who talks to a bot is stored and
+  reused for chat identity, broadcast targeting, and analytics counts. There is
+  no separate CRM UI or API yet.
 - **Auth** — JWT-based operator login with permissions and a super-admin
   bootstrap script.
 
@@ -81,7 +83,7 @@ images and run together behind a single Nginx reverse proxy.
 | Async / jobs | Celery, RabbitMQ, Flower |
 | Edge         | Nginx (reverse proxy + WebSocket upgrade) |
 | Storage      | S3-compatible object storage (presigned URLs) |
-| Tooling      | Docker Compose, Make, Ruff, mypy, pytest, pre-commit |
+| Tooling      | Docker Compose, Make, Ruff, mypy, pytest, ESLint |
 
 ## Repository layout
 
@@ -95,7 +97,7 @@ steeper/
 │   └── docs/readme/  # Architecture, infra, and contributing docs
 ├── frontend/         # React + Vite operator panel
 │   └── src/          # pages, components, api, store, hooks, types
-├── .github/workflows # CI: publish images to GHCR
+├── .github/workflows # CI: lint/type/test + publish images to GHCR
 └── Makefile          # Top-level dev & prod orchestration
 ```
 
@@ -213,11 +215,15 @@ Run from the repo root (`make info` prints a summary):
 | `make createsuperuser`      | Create the admin user |
 | `make logs` / `make logs-app` | Tail all services / just the app |
 | `make test`                 | Run the backend test suite (pytest) |
-| `make lint`                 | Run pre-commit hooks (ruff, mypy, ...) |
+| `make lint`                 | Auto-fix lint errors and format the backend |
 | `make down` / `make clean`  | Stop the stack / remove containers, volumes, images |
 | `make prod-*`               | Pull-only production stack on published images |
 
 ## CI/CD
+
+`.github/workflows/ci.yml` runs on every push and pull request against `main`:
+the backend job runs ruff, mypy, an Alembic single-head check and pytest, while
+the frontend job runs ESLint and a production build.
 
 `.github/workflows/docker-publish.yml` builds and pushes backend and frontend
 images to GHCR using the built-in `GITHUB_TOKEN` (no secrets to configure):

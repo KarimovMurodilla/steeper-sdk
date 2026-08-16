@@ -80,7 +80,9 @@ The application is split into the following domains, all registered under the
 - **`marketing/`** — broadcasts. Create/list broadcasts, dispatch them via
   background workers, and read delivery stats (`Broadcast`, `BroadcastDelivery`).
 - **`analytics/`** — per-bot aggregate metrics and update-volume time series.
-- **`crm/`** — customer records (`TelegramUser`) backing conversations.
+- **`crm/`** — the `TelegramUser` model and its repository, backing chat
+  identity, broadcast targeting and analytics counts. Model and repository
+  only: this module exposes no routes of its own.
 - **`realtime/`** — WebSocket gateway (`/v1/ws`). Each gateway instance binds an
   exclusive RabbitMQ queue and fans platform events out to connected operators.
 - **`integrations/telegram/`** — async Telegram Bot API client used to send
@@ -164,7 +166,7 @@ The application is split into the following domains, all registered under the
 │   ├── communication/                   # Webhook ingestion + operator chat (chat/)
 │   ├── marketing/                       # Broadcasts and delivery tracking
 │   ├── analytics/                       # Per-bot analytics endpoints
-│   ├── crm/                             # Customer (Telegram user) records
+│   ├── crm/                             # TelegramUser model + repository (no routes)
 │   ├── realtime/                        # WebSocket gateway + RabbitMQ consumers
 │   ├── integrations/                    # External integrations
 │   │   └── telegram/                    # Async Telegram Bot API client
