@@ -184,11 +184,11 @@ logs-frontend:
 
 .PHONY: lint
 lint:
-	cd backend && pre-commit run --all-files
+	cd backend && ruff check --fix . && ruff format .
 
 .PHONY: check-lint
 check-lint:
-	cd backend && pre-commit run --all-files --hook-stage push --verbose
+	cd backend && ruff check . && ruff format --check . && mypy src
 
 .PHONY: test
 test:
@@ -258,6 +258,6 @@ info:
 	@echo "🧪 Testing & Quality:"
 	@echo "   • make test               # Run all tests"
 	@echo "   • make check-coverage     # Check coverage report"
-	@echo "   • make lint               # Run linting on all files"
-	@echo "   • make check-lint         # Check linting during push"
+	@echo "   • make lint               # Auto-fix lint errors and format the backend"
+	@echo "   • make check-lint         # Verify lint, format and types (same as CI)"
 	@echo ""

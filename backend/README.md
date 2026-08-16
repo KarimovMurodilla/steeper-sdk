@@ -32,7 +32,7 @@ domain architecture with a full Docker stack.
   optional Sentry.
 - **Type safety** — mypy in strict mode (no implicit Optional, no untyped
   defs, no `Any` in generics).
-- **Tooling** — pre-commit / ruff / black / mypy, pytest (asyncio), Alembic.
+- **Tooling** — ruff (lint + format), mypy, pytest (asyncio), Alembic.
 
 ## API Surface
 
@@ -158,11 +158,11 @@ creates the `pg_stat_statements` extension.
 - `make clean` — remove containers/volumes/images/orphans
 - `make lint` / `make test` — quality checks
 
-## Pre-commit Hooks
+## Quality checks
 - Install dev deps: `pip install -r infra/requirements/dev.txt`
-- Update hooks: `pre-commit autoupdate` (and commit `.pre-commit-config.yaml` changes)
-- Clean hook envs if needed: `pre-commit clean`
-- Run all hooks locally: `pre-commit run --all-files` or `make lint`
+- Auto-fix and format: `make lint` (`ruff check --fix` + `ruff format`)
+- Verify the way CI does: `make check-lint` (`ruff check`, `ruff format --check`, `mypy src`)
+- Run the test suite: `make test`
 
 ## Documentation
 - Architecture & structure: [docs/readme/architecture.md](docs/readme/architecture.md)

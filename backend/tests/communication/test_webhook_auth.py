@@ -121,7 +121,9 @@ async def test_webhook_valid_secret_stores_update_and_message(
     )
     payload, raw = _update_payload()
 
-    response = await HandleWebhookUseCase(uow).execute(uuid4(), payload, raw, TOKEN_HASH)
+    response = await HandleWebhookUseCase(uow).execute(
+        uuid4(), payload, raw, TOKEN_HASH
+    )
 
     assert response.success is True
     assert len(uow.telegram_updates.recorded) == 1
@@ -144,7 +146,9 @@ async def test_webhook_duplicate_update_is_not_reprocessed() -> None:
     )
     payload, raw = _update_payload()
 
-    response = await HandleWebhookUseCase(uow).execute(uuid4(), payload, raw, TOKEN_HASH)
+    response = await HandleWebhookUseCase(uow).execute(
+        uuid4(), payload, raw, TOKEN_HASH
+    )
 
     assert response.success is True
     assert uow.messages.created == []
@@ -159,7 +163,9 @@ async def test_webhook_disabled_bot_stores_update_without_processing() -> None:
     )
     payload, raw = _update_payload()
 
-    response = await HandleWebhookUseCase(uow).execute(uuid4(), payload, raw, TOKEN_HASH)
+    response = await HandleWebhookUseCase(uow).execute(
+        uuid4(), payload, raw, TOKEN_HASH
+    )
 
     assert response.success is True
     assert uow.telegram_updates.recorded[0]["processed"] is False
@@ -176,7 +182,9 @@ async def test_webhook_non_message_update_is_stored_only() -> None:
     }
     payload = TelegramUpdatePayload.model_validate(raw)
 
-    response = await HandleWebhookUseCase(uow).execute(uuid4(), payload, raw, TOKEN_HASH)
+    response = await HandleWebhookUseCase(uow).execute(
+        uuid4(), payload, raw, TOKEN_HASH
+    )
 
     assert response.success is True
     assert uow.telegram_updates.recorded[0]["raw"] == raw

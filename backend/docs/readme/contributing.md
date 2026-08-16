@@ -2,8 +2,8 @@
 
 ## How to Contribute
 1. Fork and branch: `git checkout -b feature/your-feature`.
-2. Follow the project's typing and lint rules (mypy strict, ruff, black).
-3. Run checks locally: `make lint` and `make test`.
+2. Follow the project's typing and lint rules (mypy strict, ruff).
+3. Run checks locally: `make check-lint` and `make test`.
 4. Commit and open a PR with a clear description.
 
 ### Coding conventions
@@ -17,8 +17,22 @@ first contribution:
 
 ## CI/CD (GitHub Actions)
 
+Both workflows live in the repository root under `.github/workflows/` — GitHub
+only reads that top-level directory, so workflow files nested inside `backend/`
+would silently never run.
+
+### Checks (`.github/workflows/ci.yml`)
+Runs on every push and pull request against `main`, in two parallel jobs:
+
+- **Backend** — `ruff check`, `ruff format --check`, `mypy src`, a single-head
+  Alembic guard, and `pytest`. Both `.env` and `.env.test` are generated from
+  `backend/.env.example`, since settings are validated at import time.
+- **Frontend** — `npm ci`, `npm run lint`, `npm run build`.
+
+`make check-lint` and `make test` run the backend half locally.
+
 ### Publish images (`.github/workflows/docker-publish.yml`)
-The single workflow builds and pushes the backend and frontend images to GHCR
+This workflow builds and pushes the backend and frontend images to GHCR
 using the built-in `GITHUB_TOKEN` (no secrets to configure):
 
 - Push a `vX.Y.Z` tag → publishes `X.Y.Z`, `X.Y`, and `latest` (release images).

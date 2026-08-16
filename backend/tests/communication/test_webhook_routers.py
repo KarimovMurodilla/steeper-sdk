@@ -163,7 +163,9 @@ def test_endpoint_returns_403_on_invalid_secret(
 def test_endpoint_returns_404_for_unknown_bot(
     path: str, body: dict[str, Any], dependency: Any
 ) -> None:
-    use_case = RecordingUseCase(error=InstanceNotFoundException(ErrorCode.BOT_NOT_FOUND))
+    use_case = RecordingUseCase(
+        error=InstanceNotFoundException(ErrorCode.BOT_NOT_FOUND)
+    )
     client = _build_client(use_case, dependency)
 
     response = client.post(

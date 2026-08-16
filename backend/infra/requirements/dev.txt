@@ -1,9 +1,8 @@
 -r base.txt
 
 # Development tools
-black
 mypy
-pre-commit
+ruff
 
 # Testing dependencies
 pytest
