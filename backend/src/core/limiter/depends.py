@@ -1,5 +1,5 @@
 from collections.abc import Awaitable, Callable
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import Request, Response
 from pydantic import Field

@@ -1,0 +1,103 @@
+name: CI
+
+# Lint, type-check and test both apps in the monorepo. This file must live in
+# the repository root — GitHub Actions only reads `.github/workflows/` at the
+# top level, so a copy nested under `backend/` would never run.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          # Matches the runtime image in infra/docker/Dockerfile.
+          python-version: '3.13'
+          cache: 'pip'
+          cache-dependency-path: |
+            backend/infra/requirements.txt
+            backend/infra/requirements/*.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r infra/requirements.txt
+
+      - name: Create env files from the example
+        # Settings are validated at import time, so both the runtime and the
+        # test env file have to exist. They are gitignored by design.
+        run: |
+          cp .env.example .env
+          cp .env.example .env.test
+
+      - name: Lint (ruff)
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Type check (mypy)
+        run: mypy src
+
+      - name: Check migration HEADs
+        env:
+          PYTHONPATH: ${{ github.workspace }}/backend
+        run: |
+          echo "--- Alembic heads ---"
+          alembic heads
+          HEADS_COUNT=$(alembic heads | wc -l)
+          if [ "$HEADS_COUNT" -gt 1 ]; then
+            echo "ERROR: Multiple Alembic heads detected ($HEADS_COUNT)."
+            exit 1
+          fi
+          echo "OK: Only one Alembic head found."
+
+      - name: Run tests
+        env:
+          TESTING: 'true'
+        run: pytest -q
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (eslint)
+        run: npm run lint
+
+      - name: Build
+        run: npm run build

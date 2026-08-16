@@ -72,7 +72,8 @@ make logs-app         # app logs
 make migrate          # alembic upgrade head
 make migration        # create alembic revision
 make test             # pytest
-make lint             # pre-commit hooks
+make lint             # ruff auto-fix + format
+make check-lint       # ruff + mypy, same as CI
 make down             # stop stack
 make clean            # remove stack + volumes/images/orphans
 ```
