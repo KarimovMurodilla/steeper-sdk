@@ -41,9 +41,7 @@ class HeatmapCell(Base):
         description="Day of week in UTC, 0 is Sunday and 6 is Saturday",
         examples=[3],
     )
-    hour: int = Field(
-        ..., ge=0, le=23, description="Hour of day in UTC", examples=[14]
-    )
+    hour: int = Field(..., ge=0, le=23, description="Hour of day in UTC", examples=[14])
     count: int = Field(..., description="Updates in this cell", examples=[42])
 
 
@@ -106,7 +104,9 @@ class TopUser(Base):
     username: str | None = Field(
         None, description="Telegram username, if set", examples=["ali"]
     )
-    updates: int = Field(..., description="Updates produced in the window", examples=[87])
+    updates: int = Field(
+        ..., description="Updates produced in the window", examples=[87]
+    )
 
 
 class BotAudienceMetrics(Base):
