@@ -28,3 +28,4 @@ sentry-sdk
 sqlalchemy
 uuid6
 uvicorn
+websockets

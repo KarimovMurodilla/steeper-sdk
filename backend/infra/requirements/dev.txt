@@ -12,5 +12,3 @@ pytest-cov
 # Type stubs
 types-passlib
 types-pytz
-
-websockets

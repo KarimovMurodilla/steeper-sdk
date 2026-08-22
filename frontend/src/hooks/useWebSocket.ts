@@ -28,7 +28,7 @@ export function useWebSocket(onMessage: MessageHandler) {
 
   const getWsUrl = useCallback(() => {
     const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const host = import.meta.env.VITE_WS_HOST ?? window.location.host;
+    const host = import.meta.env.VITE_WS_HOST || window.location.host;
     return `${proto}//${host}/v1/ws`;
   }, []);
 
