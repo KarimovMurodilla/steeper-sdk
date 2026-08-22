@@ -5,7 +5,7 @@ import { AppLayout } from "@/components/Layout/AppLayout";
 import { LoginPage } from "@/pages/LoginPage";
 import { ChatPage } from "@/pages/ChatPage";
 import { BroadcastsPage } from "@/pages/BroadcastsPage";
-import { AnalyticsPage } from "@/pages/AnalyticsPage";
+import { MetricsPage } from "@/pages/MetricsPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
 const queryClient = new QueryClient({
@@ -27,7 +27,7 @@ export default function App() {
             <Route path="/" element={<Navigate to="/chats" replace />} />
             <Route path="/chats" element={<ChatPage />} />
             <Route path="/broadcasts" element={<BroadcastsPage />} />
-            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/metrics" element={<MetricsPage />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

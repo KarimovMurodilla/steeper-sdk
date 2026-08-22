@@ -137,14 +137,7 @@ export interface BroadcastStatsResponse {
   failed: number;
 }
 
-// ── Analytics ──
-
-export interface BotAnalyticsSummary {
-  users: number;
-  chats: number;
-  messages: number;
-  dau: number;
-}
+// ── Metrics ──
 
 export type TimeGranularity = "hour" | "day" | "week" | "month";
 
@@ -158,18 +151,52 @@ export interface TimeBucketCount {
   count: number;
 }
 
-export interface BotUpdateStats {
-  total: number;
-  active_users: number;
-  by_type: LabeledCount[];
-  by_content_type: LabeledCount[];
-  timeseries: TimeBucketCount[];
-}
-
-export interface UpdateStatsParams {
+export interface MetricsParams {
   granularity?: TimeGranularity;
   since?: string;
   until?: string;
+}
+
+export interface HeatmapCell {
+  weekday: number;
+  hour: number;
+  count: number;
+}
+
+export interface BotTrafficMetrics {
+  total_updates: number;
+  total_messages: number;
+  total_chats: number;
+  all_time_messages: number;
+  by_update_type: LabeledCount[];
+  by_content_type: LabeledCount[];
+  by_chat_type: LabeledCount[];
+  by_sender_type: LabeledCount[];
+  timeseries: TimeBucketCount[];
+  heatmap: HeatmapCell[];
+}
+
+export interface ActiveUserCounts {
+  dau: number;
+  wau: number;
+  mau: number;
+}
+
+export interface TopUser {
+  tg_user_id: number;
+  first_name: string | null;
+  username: string | null;
+  updates: number;
+}
+
+export interface BotAudienceMetrics {
+  total_users: number;
+  new_users: number;
+  active: ActiveUserCounts;
+  churned_users: number;
+  new_users_timeseries: TimeBucketCount[];
+  by_language: LabeledCount[];
+  top_users: TopUser[];
 }
 
 // ── System ──

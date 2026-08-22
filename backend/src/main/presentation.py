@@ -2,7 +2,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
 
-from src.analytics.routers.analytics import router as analytics_router
+from src.analytics.routers.metrics import router as metrics_router
 from src.bot import routers as bot_routers
 from src.communication import routers as communication_routers
 from src.communication.chat import routers as chat_routers
@@ -59,7 +59,7 @@ def include_routers(app: FastAPI) -> None:
     )
     v1_router.include_router(bot_routers.router, prefix="/bots", tags=["Bots"])
     v1_router.include_router(chat_routers.router, prefix="/bots", tags=["Chats"])
-    v1_router.include_router(analytics_router, prefix="/bots", tags=["Analytics"])
+    v1_router.include_router(metrics_router, prefix="/bots", tags=["Metrics"])
     v1_router.include_router(
         marketing_routers.router, prefix="/broadcasts", tags=["Broadcasts"]
     )

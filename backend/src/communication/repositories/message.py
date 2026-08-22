@@ -1,4 +1,5 @@
-from datetime import date
+from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -46,19 +47,27 @@ class MessageRepository(BaseRepository[Message]):
         )
         return int((await session.execute(stmt)).scalar_one())
 
-    async def count_dau_by_bot(self, session: AsyncSession, bot_id: UUID) -> int:
-        """
-        Daily Active Users: distinct telegram users that had activity
-        (at least one message in any chat for this bot) today (UTC).
-        """
-        today_start = date.today()
+    async def count_by_sender_type(
+        self,
+        session: AsyncSession,
+        bot_id: UUID,
+        since: datetime | None = None,
+        until: datetime | None = None,
+    ) -> list[tuple[str, int]]:
+        """Message counts grouped by ``sender_type`` (inbound vs outbound)."""
+        conditions: list[Any] = [Chat.bot_id == bot_id]
+        if since is not None:
+            conditions.append(self.model.created_at >= since)
+        if until is not None:
+            conditions.append(self.model.created_at < until)
+
         stmt = (
-            select(func.count(func.distinct(Chat.telegram_user_id)))
+            select(self.model.sender_type, func.count())
             .select_from(self.model)
             .join(Chat, Chat.id == self.model.chat_id)
-            .where(
-                Chat.bot_id == bot_id,
-                func.date(self.model.created_at) == today_start,
-            )
+            .where(*conditions)
+            .group_by(self.model.sender_type)
+            .order_by(func.count().desc())
         )
-        return int((await session.execute(stmt)).scalar_one())
+        rows = (await session.execute(stmt)).all()
+        return [(str(sender_type), int(count)) for sender_type, count in rows]

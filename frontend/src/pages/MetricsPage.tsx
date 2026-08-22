@@ -1,9 +1,9 @@
 import { Bot } from "lucide-react";
 import { useActiveBot } from "@/hooks/useActiveBot";
-import { AnalyticsDashboard } from "@/components/Analytics/AnalyticsDashboard";
+import { MetricsDashboard } from "@/components/Metrics/MetricsDashboard";
 import { EmptyState } from "@/components/ui/EmptyState";
 
-export function AnalyticsPage() {
+export function MetricsPage() {
   const { activeBotId, bots, isLoading } = useActiveBot();
 
   return (
@@ -11,7 +11,7 @@ export function AnalyticsPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Analytics</h1>
         <p className="mt-1 text-sm text-tg-text-secondary">
-          Insights from your Telegram updates
+          Traffic and audience of your bot
         </p>
       </div>
 
@@ -19,11 +19,11 @@ export function AnalyticsPage() {
         <EmptyState
           icon={Bot}
           title="No bots connected"
-          description="Add a bot from the switcher to start collecting analytics."
+          description="Add a bot from the switcher to start collecting metrics."
           className="py-24"
         />
       ) : (
-        <AnalyticsDashboard botId={activeBotId} />
+        <MetricsDashboard botId={activeBotId} />
       )}
     </div>
   );
