@@ -25,9 +25,11 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-tg-bg px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-primary text-2xl font-bold text-white shadow-lg shadow-tg-primary/30">
-            S
-          </div>
+          <img
+            src="/favicon.png"
+            alt="Steeper"
+            className="mx-auto mb-4 h-16 w-16 rounded-full shadow-lg shadow-tg-primary/30"
+          />
           <h1 className="text-2xl font-bold">Welcome to Steeper</h1>
           <p className="mt-1 text-sm text-tg-text-secondary">
             Sign in to manage your Telegram bots
