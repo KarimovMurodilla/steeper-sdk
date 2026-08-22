@@ -35,6 +35,8 @@ export default function App() {
       <Toaster
         position="top-right"
         toastOptions={{
+          duration: 6000,
+          error: { duration: 8000 },
           style: {
             background: "#182533",
             color: "#f5f5f5",
