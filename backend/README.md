@@ -2,7 +2,7 @@
 
 Async **FastAPI** backend for the [Steeper](../README.md) Telegram bot operations
 platform: register bots, ingest Telegram webhooks, run a live operator chat over
-WebSockets, dispatch broadcasts, and expose analytics — all behind a modular
+WebSockets, dispatch broadcasts, and expose metrics — all behind a modular
 domain architecture with a full Docker stack.
 
 ## Key Features
@@ -53,8 +53,8 @@ All application routes are versioned under `/v1`; system routes sit at the root.
 | Chats          | `GET  /v1/bots/{bot_id}/chats`                        | List chats for a bot |
 | Chats          | `GET  /v1/bots/{bot_id}/chats/{chat_id}/messages`    | List messages in a chat |
 | Chats          | `POST /v1/bots/{bot_id}/chats/{chat_id}/messages`    | Operator sends a message |
-| Analytics      | `GET  /v1/bots/{bot_id}/analytics/summary`           | Aggregate metrics |
-| Analytics      | `GET  /v1/bots/{bot_id}/analytics/updates`           | Update volume over time |
+| Metrics        | `GET  /v1/bots/{bot_id}/metrics/traffic`             | Update/message volume, breakdowns, heatmap |
+| Metrics        | `GET  /v1/bots/{bot_id}/metrics/audience`            | Users, growth, DAU/WAU/MAU, churn, languages |
 | Broadcasts     | `POST /v1/broadcasts/`                                | Create a broadcast |
 | Broadcasts     | `GET  /v1/broadcasts/`                                | List broadcasts |
 | Broadcasts     | `POST /v1/broadcasts/{broadcast_id}/send`            | Dispatch a broadcast (background) |

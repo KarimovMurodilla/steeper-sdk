@@ -2,7 +2,7 @@
 
 **Steeper** is a self-hostable platform for running and operating Telegram bots —
 register multiple bots, talk to your users from a live operator panel, send
-broadcasts, and track analytics. It pairs an async **FastAPI** backend with a
+broadcasts, and track metrics. It pairs an async **FastAPI** backend with a
 modern **React** operator dashboard, all wired together with a one-command
 Docker stack.
 
@@ -37,9 +37,9 @@ Docker stack.
   reply in real time over WebSockets.
 - **Broadcasts** — compose and dispatch mass messages to your audience via
   background workers.
-- **Analytics** — track usage and messaging activity.
+- **Metrics** — track traffic and audience: update and message volume, content and chat breakdowns, an activity heatmap, growth, DAU/WAU/MAU, churn, and languages.
 - **Audience records** — every Telegram user who talks to a bot is stored and
-  reused for chat identity, broadcast targeting, and analytics counts. There is
+  reused for chat identity, broadcast targeting, and metrics counts. There is
   no separate CRM UI or API yet.
 - **Auth** — JWT-based operator login with permissions and a super-admin
   bootstrap script.
@@ -69,7 +69,7 @@ images and run together behind a single Nginx reverse proxy.
   and an async S3 storage adapter.
 - **`frontend/`** — React 19 + Vite + TypeScript operator panel
   (TanStack Query, Zustand, Tailwind, React Router). Pages: **Chats**,
-  **Broadcasts**, **Analytics**, and **Login**. Bots have no page of their own —
+  **Broadcasts**, **Metrics**, and **Login**. Bots have no page of their own —
   adding, selecting, and managing them happens in the sidebar bot switcher,
   available everywhere in the panel.
 

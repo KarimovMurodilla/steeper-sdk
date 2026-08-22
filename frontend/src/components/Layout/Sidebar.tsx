@@ -15,7 +15,7 @@ import { BotSwitcher } from "@/components/Bot/BotSwitcher";
 const navItems = [
   { to: "/chats", icon: MessageSquare, label: "Chats" },
   { to: "/broadcasts", icon: Megaphone, label: "Broadcasts" },
-  { to: "/analytics", icon: BarChart3, label: "Analytics" },
+  { to: "/metrics", icon: BarChart3, label: "Metrics" },
 ];
 
 export function Sidebar() {

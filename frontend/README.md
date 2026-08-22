@@ -2,7 +2,7 @@
 
 Operator dashboard for the [Steeper](../README.md) platform: a **React 19 + Vite
 + TypeScript** single-page app where operators manage bots, chat with users in
-real time, run broadcasts, and view analytics.
+real time, run broadcasts, and view metrics.
 
 ## Tech stack
 
@@ -27,7 +27,7 @@ Routing lives in `src/App.tsx`. All app routes render inside `AppLayout`
 | `/`           | →                 | Redirects to `/chats` |
 | `/chats`      | `ChatPage`        | Live operator chat (WebSocket) |
 | `/broadcasts` | `BroadcastsPage`  | Create/list broadcasts, view stats |
-| `/analytics`  | `AnalyticsPage`   | Per-bot metrics and charts |
+| `/metrics`    | `MetricsPage`     | Per-bot traffic and audience metrics |
 | `*`           | `NotFoundPage`    | Fallback |
 
 ## Project layout
@@ -35,8 +35,8 @@ Routing lives in `src/App.tsx`. All app routes render inside `AppLayout`
 ```
 src/
 ├── api/          # Axios client + per-domain API modules (auth, bots, chats,
-│                 #   broadcasts, analytics)
-├── components/   # Feature components (Bot, Chat, Broadcast, Analytics, Layout)
+│                 #   broadcasts, metrics)
+├── components/   # Feature components (Bot, Chat, Broadcast, Metrics, Layout)
 │   └── ui/       # Reusable primitives (Button, Modal, Input, Avatar, ...)
 ├── hooks/        # TanStack Query hooks + useWebSocket, useActiveBot
 ├── pages/        # Route-level pages

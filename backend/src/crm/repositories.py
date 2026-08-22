@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
@@ -73,3 +74,78 @@ class TelegramUserRepository(SoftDeleteRepository[TelegramUser]):
             .where(self.model.bot_id == bot_id, self.model.is_deleted.is_(False))
         )
         return int((await session.execute(stmt)).scalar_one())
+
+    def _bot_window(
+        self,
+        bot_id: UUID,
+        since: datetime | None,
+        until: datetime | None,
+    ) -> list[Any]:
+        """Bot scope plus an optional ``[since, until)`` window over creation."""
+        conditions: list[Any] = [
+            self.model.bot_id == bot_id,
+            self.model.is_deleted.is_(False),
+        ]
+        if since is not None:
+            conditions.append(self.model.created_at >= since)
+        if until is not None:
+            conditions.append(self.model.created_at < until)
+        return conditions
+
+    async def new_users_timeseries(
+        self,
+        session: AsyncSession,
+        bot_id: UUID,
+        granularity: str = "day",
+        since: datetime | None = None,
+        until: datetime | None = None,
+    ) -> list[tuple[datetime, int]]:
+        """First-seen users bucketed by ``granularity`` (day/hour/week/month)."""
+        bucket = func.date_trunc(granularity, self.model.created_at)
+        stmt = (
+            select(bucket.label("bucket"), func.count())
+            .where(*self._bot_window(bot_id, since, until))
+            .group_by(bucket)
+            .order_by(bucket)
+        )
+        rows = (await session.execute(stmt)).all()
+        return [(bucket_value, int(count)) for bucket_value, count in rows]
+
+    async def count_by_language(
+        self,
+        session: AsyncSession,
+        bot_id: UUID,
+        since: datetime | None = None,
+        until: datetime | None = None,
+    ) -> list[tuple[str, int]]:
+        """User counts grouped by ``language_code``."""
+        stmt = (
+            select(self.model.language_code, func.count())
+            .where(
+                *self._bot_window(bot_id, since, until),
+                self.model.language_code.is_not(None),
+            )
+            .group_by(self.model.language_code)
+            .order_by(func.count().desc())
+        )
+        rows = (await session.execute(stmt)).all()
+        return [(str(language_code), int(count)) for language_code, count in rows]
+
+    async def get_display_names(
+        self, session: AsyncSession, bot_id: UUID, tg_user_ids: list[int]
+    ) -> dict[int, tuple[str | None, str | None]]:
+        """Map ``tg_user_id`` to its ``(first_name, username)`` pair."""
+        if not tg_user_ids:
+            return {}
+
+        stmt = select(
+            self.model.tg_user_id, self.model.first_name, self.model.username
+        ).where(
+            self.model.bot_id == bot_id,
+            self.model.tg_user_id.in_(tg_user_ids),
+        )
+        rows = (await session.execute(stmt)).all()
+        return {
+            int(tg_user_id): (first_name, username)
+            for tg_user_id, first_name, username in rows
+        }
