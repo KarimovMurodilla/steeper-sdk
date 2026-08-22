@@ -163,10 +163,22 @@ make prod-down
 Open `http://<host>:8000` (operator panel) and `http://<host>:8000/docs` (API).
 **Put a TLS-terminating proxy in front of port 8000 for production.**
 
-Images (pin a release with `STEEPER_TAG`, default `latest`):
+Images:
 
 - `ghcr.io/karimovmurodilla/steeper-backend`
 - `ghcr.io/karimovmurodilla/steeper-frontend`
+
+`STEEPER_TAG` selects the version, default `latest` — a rolling tag that follows
+the `main` branch, so `make prod-pull` always fetches the newest build. To stay
+on a fixed release, pin it in **both** commands (or export it once):
+
+```bash
+export STEEPER_TAG=0.1.0
+make prod-pull
+make prod-up
+```
+
+Pulling with one tag and starting with another leaves the old image running.
 
 > The frontend image talks to the API on its own origin (same-origin, behind the
 > bundled Nginx). To bake a different backend URL, rebuild it with
@@ -228,8 +240,8 @@ the frontend job runs ESLint and a production build.
 `.github/workflows/docker-publish.yml` builds and pushes backend and frontend
 images to GHCR using the built-in `GITHUB_TOKEN` (no secrets to configure):
 
-- Push a `vX.Y.Z` tag → publishes `X.Y.Z`, `X.Y`, and `latest` (release images).
-- Push to `main` → publishes `main` and `sha-<short>` (rolling images).
+- Push a `vX.Y.Z` tag → publishes `X.Y.Z` and `X.Y` (pinnable release images).
+- Push to `main` → publishes `main`, `sha-<short>`, and `latest` (rolling images).
 
 ## Documentation
 

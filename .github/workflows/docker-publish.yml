@@ -4,8 +4,11 @@ name: Publish Docker images
 # Registry (GHCR). Uses the built-in GITHUB_TOKEN — no secrets to configure.
 #
 # Tags produced:
-#   - push of a `vX.Y.Z` tag  -> X.Y.Z, X.Y, latest   (release images)
-#   - push to `main`          -> main, sha-<short>     (rolling images)
+#   - push of a `vX.Y.Z` tag  -> X.Y.Z, X.Y            (release images)
+#   - push to `main`          -> main, sha-<short>, latest (rolling images)
+#
+# `latest` follows the default branch, so a plain `make prod-pull` always gets
+# the newest build. Pin a release with STEEPER_TAG=X.Y.Z to stay on a version.
 #
 # After the first run, mark the packages public at
 # https://github.com/users/KarimovMurodilla/packages (Package settings ->
@@ -58,14 +61,15 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ matrix.image }}
-          # latest=auto -> the `latest` tag is applied automatically on semver
-          # tag builds, not on branch builds.
-          flavor: latest=auto
+          # latest=false -> disable the automatic semver `latest`; it is
+          # attached to default-branch builds by the raw tag below instead.
+          flavor: latest=false
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=ref,event=branch
             type=sha,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push
         uses: docker/build-push-action@v6
