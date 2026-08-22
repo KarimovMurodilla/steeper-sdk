@@ -28,7 +28,12 @@ export function MessageBubble({ message }: Props) {
             System
           </span>
         )}
-        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+        <p
+          className={cn(
+            "text-sm leading-relaxed whitespace-pre-wrap break-words",
+            message.is_placeholder && "italic text-tg-text-muted",
+          )}
+        >
           {message.content ?? ""}
         </p>
         <div

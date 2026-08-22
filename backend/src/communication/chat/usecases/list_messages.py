@@ -49,6 +49,9 @@ class ListMessagesUseCase:
                 id=msg.id,
                 sender=msg.sender_type,
                 content=msg.content,
+                is_placeholder=bool(
+                    (msg.metadata_info or {}).get("content_placeholder")
+                ),
                 created_at=msg.created_at,
             )
             for msg in messages

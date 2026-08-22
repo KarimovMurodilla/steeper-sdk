@@ -90,6 +90,7 @@ export interface MessageListItemViewModel {
   id: string;
   sender: SenderType;
   content: string | null;
+  is_placeholder?: boolean;
   created_at: string;
 }
 
