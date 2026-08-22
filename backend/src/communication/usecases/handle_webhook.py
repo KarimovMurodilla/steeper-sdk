@@ -45,6 +45,27 @@ _CONTENT_TO_MESSAGE_TYPE: dict[ContentType, MessageType] = {
     ContentType.SERVICE: MessageType.SYSTEM,
 }
 
+# Human-readable placeholders for non-text messages that carry no caption.
+# Stored as message content so history never shows an empty string.
+_CONTENT_PLACEHOLDERS: dict[ContentType, str] = {
+    ContentType.PHOTO: "<Фото недоступно>",
+    ContentType.VIDEO: "<Видео недоступно>",
+    ContentType.VIDEO_NOTE: "<Видеосообщение недоступно>",
+    ContentType.ANIMATION: "<GIF недоступен>",
+    ContentType.VOICE: "<Голосовое сообщение недоступно>",
+    ContentType.AUDIO: "<Аудио недоступно>",
+    ContentType.DOCUMENT: "<Документ недоступен>",
+    ContentType.STICKER: "<Стикер>",
+    ContentType.LOCATION: "<Локация>",
+    ContentType.VENUE: "<Место>",
+    ContentType.CONTACT: "<Контакт>",
+    ContentType.POLL: "<Опрос>",
+    ContentType.DICE: "<Игровой кубик>",
+    ContentType.SERVICE: "<Системное сообщение>",
+}
+
+_UNKNOWN_CONTENT_PLACEHOLDER = "<Сообщение недоступно>"
+
 # Update types that we turn into Chat/Message domain objects.
 _PROCESSABLE_MESSAGE_TYPES = frozenset({UpdateType.MESSAGE, UpdateType.EDITED_MESSAGE})
 
@@ -261,6 +282,13 @@ class HandleWebhookUseCase:
                 is_new_chat = True
 
             content = typed_msg.text or typed_msg.caption or ""
+            is_placeholder = not content
+            if is_placeholder:
+                content = _CONTENT_PLACEHOLDERS.get(
+                    classified.content_type or ContentType.UNKNOWN,
+                    _UNKNOWN_CONTENT_PLACEHOLDER,
+                )
+
             msg_type = _CONTENT_TO_MESSAGE_TYPE.get(
                 classified.content_type or ContentType.UNKNOWN, MessageType.MEDIA
             )
@@ -273,6 +301,8 @@ class HandleWebhookUseCase:
                 "content": content,
                 "metadata_info": {
                     "tg_date": typed_msg.date,
+                    # UI renders placeholder content in italics.
+                    "content_placeholder": is_placeholder,
                     "content_type": (
                         classified.content_type.value
                         if classified.content_type

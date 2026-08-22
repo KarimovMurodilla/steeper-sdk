@@ -216,7 +216,7 @@ export function MetricsDashboard({ botId }: Props) {
           )}
         </Panel>
 
-        <Panel title="Activity by hour" hint="Weekday and hour of day, UTC">
+        <Panel title="Activity by hour" hint="Weekday and hour of day, local time">
           {trafficLoading ? (
             <div className="flex h-60 items-center justify-center">
               <Spinner />

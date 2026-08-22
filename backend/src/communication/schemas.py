@@ -206,6 +206,14 @@ class MessageListItemViewModel(Base):
     content: str | None = Field(
         None, description="Message text content", examples=["Hello"]
     )
+    is_placeholder: bool = Field(
+        False,
+        description=(
+            "True when content is a generated placeholder for a non-text "
+            "message (no text/caption); clients render it in italics."
+        ),
+        examples=[False],
+    )
     created_at: datetime = Field(
         ..., description="Message timestamp", examples=["2025-01-01T12:00:00Z"]
     )
