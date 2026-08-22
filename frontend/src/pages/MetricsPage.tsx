@@ -9,7 +9,7 @@ export function MetricsPage() {
   return (
     <div className="mx-auto max-w-5xl p-4 sm:p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Metrics</h1>
+        <h1 className="text-2xl font-bold">Analytics</h1>
         <p className="mt-1 text-sm text-tg-text-secondary">
           Traffic and audience of your bot
         </p>
