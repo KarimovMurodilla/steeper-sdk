@@ -28,6 +28,8 @@ ERROR_TEXTS_UZ: dict[ErrorCode, str] = {
     # --- Bot ---
     ErrorCode.BOT_NOT_FOUND: "Bot topilmadi.",
     ErrorCode.BOT_LOGS_STORAGE_UNAVAILABLE: "Loglar ombori mavjud emas.",
+    ErrorCode.FUNNEL_NOT_FOUND: "Voronka topilmadi.",
+    ErrorCode.FUNNEL_INVALID_DEFINITION: "Voronka tavsifi yoki so'ralgan davr ruxsat etilgan chegaradan tashqarida.",
     ErrorCode.BOT_UPDATE_FAILED: "Telegram orqali bot ma'lumotlarini yangilab bo'lmadi.",
     ErrorCode.BOT_REGISTRATION_FAILED: "Telegram'da botni ro'yxatdan o'tkazib bo'lmadi.",
     ErrorCode.BOT_ADMIN_ALREADY_EXISTS: "Foydalanuvchi allaqachon ushbu botning admini.",

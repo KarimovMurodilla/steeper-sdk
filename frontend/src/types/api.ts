@@ -253,3 +253,66 @@ export interface BotLogQueryParams {
   since?: string;
   until?: string;
 }
+
+// ── Funnels ──
+
+export interface EventName {
+  name: string;
+  count: number;
+}
+
+export interface FunnelViewModel {
+  id: string;
+  bot_id: string;
+  name: string;
+  steps: string[];
+  window_seconds: number;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export interface FunnelCreateRequest {
+  name: string;
+  steps: string[];
+  window_seconds: number;
+}
+
+export interface FunnelUpdateRequest {
+  name?: string;
+  steps?: string[];
+  window_seconds?: number;
+}
+
+export interface FunnelReportParams {
+  since?: string;
+  until?: string;
+  /**
+   * Admit only entrants who have had a full conversion window. Off by default
+   * because it hides the most recent cohort entirely.
+   */
+  mature_only?: boolean;
+  include_timings?: boolean;
+}
+
+export interface FunnelStepReport {
+  name: string;
+  position: number;
+  users: number;
+  /**
+   * Null, not zero, when there is no data to divide by — nobody reached the
+   * previous step. Render it as "—", never as 0%.
+   */
+  conversion_from_previous: number | null;
+  conversion_from_first: number | null;
+  median_seconds_from_previous: number | null;
+}
+
+export interface FunnelReport {
+  funnel_id: string;
+  name: string;
+  window_seconds: number;
+  since: string;
+  until: string;
+  total_entered: number;
+  steps: FunnelStepReport[];
+}

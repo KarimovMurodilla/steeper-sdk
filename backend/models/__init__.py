@@ -7,6 +7,10 @@ table relationships effectively.
 
 # Import all models here
 
+from src.analytics.models import (
+    BotEvent as BotEvent,
+    Funnel as Funnel,
+)
 from src.bot.models import Bot as Bot
 from src.communication.models import (
     Chat as Chat,

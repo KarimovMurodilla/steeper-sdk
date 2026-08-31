@@ -28,6 +28,8 @@ ERROR_TEXTS_RU: dict[ErrorCode, str] = {
     # --- Bot ---
     ErrorCode.BOT_NOT_FOUND: "Бот не найден.",
     ErrorCode.BOT_LOGS_STORAGE_UNAVAILABLE: "Хранилище логов недоступно.",
+    ErrorCode.FUNNEL_NOT_FOUND: "Воронка не найдена.",
+    ErrorCode.FUNNEL_INVALID_DEFINITION: "Определение воронки или запрошенный период выходят за допустимые границы.",
     ErrorCode.BOT_UPDATE_FAILED: "Не удалось обновить информацию о боте в Telegram.",
     ErrorCode.BOT_REGISTRATION_FAILED: "Не удалось зарегистрировать бота в Telegram.",
     ErrorCode.BOT_ADMIN_ALREADY_EXISTS: "Пользователь уже является администратором этого бота.",

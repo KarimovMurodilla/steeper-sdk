@@ -54,6 +54,5 @@ def get_update_bot_use_case(
 
 def get_delete_bot_use_case(
     uow: ApplicationUnitOfWork[RepositoryProtocol] = Depends(get_unit_of_work),
-    tg_service: TelegramBotAPIService = Depends(get_telegram_bot_api_service),
 ) -> DeleteBotUseCase:
-    return DeleteBotUseCase(uow=uow, tg_service=tg_service)
+    return DeleteBotUseCase(uow=uow)

@@ -28,6 +28,8 @@ ERROR_TEXTS_EN: dict[ErrorCode, str] = {
     # --- Bot ---
     ErrorCode.BOT_NOT_FOUND: "Bot not found.",
     ErrorCode.BOT_LOGS_STORAGE_UNAVAILABLE: "Log storage is unavailable.",
+    ErrorCode.FUNNEL_NOT_FOUND: "Funnel not found.",
+    ErrorCode.FUNNEL_INVALID_DEFINITION: "The funnel definition or the requested window is out of bounds.",
     ErrorCode.BOT_UPDATE_FAILED: "Failed to update bot information with Telegram.",
     ErrorCode.BOT_REGISTRATION_FAILED: "Failed to register bot with Telegram.",
     ErrorCode.BOT_ADMIN_ALREADY_EXISTS: "User is already an admin of this bot.",
