@@ -36,6 +36,7 @@ from src.core.errors.handlers import (
 from src.marketing import routers as marketing_routers
 from src.realtime import routers as realtime_routers
 from src.system import routers as system_routers
+from src.system.logs import routers as bot_log_routers
 
 # Import routers here
 from src.user import routers as user_routers
@@ -60,6 +61,12 @@ def include_routers(app: FastAPI) -> None:
     v1_router.include_router(bot_routers.router, prefix="/bots", tags=["Bots"])
     v1_router.include_router(chat_routers.router, prefix="/bots", tags=["Chats"])
     v1_router.include_router(metrics_router, prefix="/bots", tags=["Metrics"])
+    v1_router.include_router(bot_log_routers.router, prefix="/bots", tags=["Bot Logs"])
+    v1_router.include_router(
+        bot_log_routers.ingest_router,
+        prefix="/communications/webhook",
+        tags=["Bot Logs"],
+    )
     v1_router.include_router(
         marketing_routers.router, prefix="/broadcasts", tags=["Broadcasts"]
     )

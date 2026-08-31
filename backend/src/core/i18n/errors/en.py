@@ -27,6 +27,7 @@ ERROR_TEXTS_EN: dict[ErrorCode, str] = {
     ErrorCode.WORKSPACE_MEMBER_NOT_FOUND: "User is not a member of the workspace.",
     # --- Bot ---
     ErrorCode.BOT_NOT_FOUND: "Bot not found.",
+    ErrorCode.BOT_LOGS_STORAGE_UNAVAILABLE: "Log storage is unavailable.",
     ErrorCode.BOT_UPDATE_FAILED: "Failed to update bot information with Telegram.",
     ErrorCode.BOT_REGISTRATION_FAILED: "Failed to register bot with Telegram.",
     ErrorCode.BOT_ADMIN_ALREADY_EXISTS: "User is already an admin of this bot.",

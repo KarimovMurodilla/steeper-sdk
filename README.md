@@ -38,6 +38,8 @@ Docker stack.
 - **Broadcasts** — compose and dispatch mass messages to your audience via
   background workers.
 - **Metrics** — track traffic and audience: update and message volume, content and chat breakdowns, an activity heatmap, growth, DAU/WAU/MAU, churn, and languages.
+- **Bot logs** — bots ship their `logging` output to the platform; operators read
+  the live stream and search the history, stored in Loki with its own retention.
 - **Audience records** — every Telegram user who talks to a bot is stored and
   reused for chat identity, broadcast targeting, and metrics counts. There is
   no separate CRM UI or API yet.
@@ -57,9 +59,9 @@ images and run together behind a single Nginx reverse proxy.
    Operator browser ─────▶│   └── / .............. frontend (operator panel)
                           └──────────────┬───────────────────────────┘
                                          │
-        ┌──────────────┬────────────────┼──────────────┬──────────────┐
-     Postgres        Redis           RabbitMQ        Celery          Flower
-   (data)         (cache/limiter)    (broker)    (worker + beat)   (monitoring)
+    ┌───────────┬───────────┬─────────┼─────────┬───────────┬──────────┐
+ Postgres     Redis      RabbitMQ    Celery    Flower       Loki
+ (data)   (cache/limiter) (broker) (worker+beat)(monitoring)(bot logs)
 ```
 
 - **`backend/`** — async FastAPI app with a modular domain structure
@@ -69,7 +71,7 @@ images and run together behind a single Nginx reverse proxy.
   and an async S3 storage adapter.
 - **`frontend/`** — React 19 + Vite + TypeScript operator panel
   (TanStack Query, Zustand, Tailwind, React Router). Pages: **Chats**,
-  **Broadcasts**, **Metrics**, and **Login**. Bots have no page of their own —
+  **Broadcasts**, **Metrics**, **Logs**, and **Login**. Bots have no page of their own —
   adding, selecting, and managing them happens in the sidebar bot switcher,
   available everywhere in the panel.
 
@@ -79,7 +81,7 @@ images and run together behind a single Nginx reverse proxy.
 |--------------|--------------|
 | Backend      | FastAPI, SQLAlchemy (async), Alembic, Pydantic |
 | Frontend     | React 19, Vite 6, TypeScript, TanStack Query, Zustand, Tailwind CSS |
-| Data         | PostgreSQL 18, Redis |
+| Data         | PostgreSQL 18, Redis, Loki (bot logs) |
 | Async / jobs | Celery, RabbitMQ, Flower |
 | Edge         | Nginx (reverse proxy + WebSocket upgrade) |
 | Storage      | S3-compatible object storage (presigned URLs) |
@@ -208,9 +210,10 @@ Dev stack (`docker-compose.yml`). Host ports marked *(env)* come from
 | Redis     | 6379 *(env)*       | `REDIS_PORT`, cache / rate limiter       |
 | RabbitMQ  | 5672 *(env)* / 15672 | `RABBITMQ_PORT` (AMQP) / management UI |
 | Flower    | 5555               | Celery monitoring                        |
+| Loki      | — (internal 3100)  | Bot log storage, not published           |
 
 In production (`docker-compose.prod.yml`) only Nginx publishes a port (8000).
-Postgres, Redis, RabbitMQ, the app, and Flower stay on the internal network —
+Postgres, Redis, RabbitMQ, Loki, the app, and Flower stay on the internal network —
 uncomment the `ports` mapping on the `flower` service if you need its UI.
 
 ## Common commands

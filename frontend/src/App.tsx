@@ -6,6 +6,7 @@ import { LoginPage } from "@/pages/LoginPage";
 import { ChatPage } from "@/pages/ChatPage";
 import { BroadcastsPage } from "@/pages/BroadcastsPage";
 import { MetricsPage } from "@/pages/MetricsPage";
+import { LogsPage } from "@/pages/LogsPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
 const queryClient = new QueryClient({
@@ -28,6 +29,7 @@ export default function App() {
             <Route path="/chats" element={<ChatPage />} />
             <Route path="/broadcasts" element={<BroadcastsPage />} />
             <Route path="/metrics" element={<MetricsPage />} />
+            <Route path="/logs" element={<LogsPage />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

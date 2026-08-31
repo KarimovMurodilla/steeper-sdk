@@ -179,8 +179,10 @@ cython_debug/
 # Linter cache files
 .ruff_cache/
 
-# Application logs
-logs/
+# Application logs — anchored, so source packages named "logs"
+# (e.g. backend/src/system/logs) are not swallowed.
+/logs/
+/backend/logs/
 
 # Local Claude Code settings (per-developer, never shared)
 .claude/settings.local.json

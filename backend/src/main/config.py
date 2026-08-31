@@ -219,6 +219,21 @@ class TelegramConfig(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
 
+class LokiConfig(BaseModel):
+    """Connection settings for Loki, where bot logs are stored.
+
+    Retention is not configured here: the Loki compactor owns it
+    (``infra/loki/config.yaml``), so the backend never sweeps log storage.
+    """
+
+    LOKI_URL: str = Field("http://loki:3100")
+    LOKI_TIMEOUT: float = Field(5.0, gt=0)
+    # Upper bound for a single query_range call, mirrored by the API's page size.
+    LOKI_QUERY_MAX_LIMIT: int = Field(500, ge=1, le=5000)
+
+    model_config = ConfigDict(extra="ignore")
+
+
 class Config(BaseModel):
     _project_root: Path | None = None
 
@@ -233,6 +248,7 @@ class Config(BaseModel):
     mailjet: MailjetConfig
     administration: AdministrationConfig
     telegram: TelegramConfig
+    loki: LokiConfig
 
     model_config = ConfigDict(extra="ignore")
 
@@ -268,6 +284,7 @@ def get_settings() -> Config:
         mailjet=MailjetConfig(**merged_env),
         administration=AdministrationConfig(**merged_env),
         telegram=TelegramConfig(**merged_env),
+        loki=LokiConfig(**merged_env),
     )
 
 

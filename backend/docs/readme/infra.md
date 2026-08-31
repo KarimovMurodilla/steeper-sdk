@@ -12,6 +12,7 @@ from `.env`; the values below are the `.env.example` defaults.
 - Redis: 6379 *(env: `REDIS_PORT`)*
 - RabbitMQ: 5672 *(env: `RABBITMQ_PORT`)* (AMQP), 15672 (UI)
 - Flower: 5555
+- Loki: internal only (3100) — bot log storage, never published
 
 Configs live in `infra/` (compose, nginx, dockerfiles, redis/postgres, requirements).
 
@@ -19,7 +20,7 @@ Configs live in `infra/` (compose, nginx, dockerfiles, redis/postgres, requireme
 - `docker-compose.yml` — base dev/prod-like stack, builds images from the repo.
 - `docker-compose.override.yml` — dev overrides (hot-reload), applied by `make run-dev`.
 - `docker-compose.prod.yml` — pull-only stack on published GHCR images. Only
-  Nginx publishes a host port (8000); Postgres/Redis/RabbitMQ/app/Flower stay on
+  Nginx publishes a host port (8000); Postgres/Redis/RabbitMQ/Loki/app/Flower stay on
   the internal `steeper-network`. Postgres is still built locally
   (`make prod-build-db`), since its image is infra rather than a published app image.
 
@@ -35,6 +36,10 @@ Configs live in `infra/` (compose, nginx, dockerfiles, redis/postgres, requireme
 - **Nginx:** Reverse proxy to app.
 - **Redis:** Cache/result backend with password.
 - **RabbitMQ:** Broker with management UI.
+- **Loki:** Log storage for logs shipped by bots through the `steeper` library
+  (`src/system/logs`). Single-binary, filesystem-backed, configured by
+  `infra/loki/config.yaml`; data lives in the `app-loki-data` volume. Retention is
+  Loki's own (`retention_period` + compactor), so the backend runs no purge task.
 
 ## Prerequisites
 - Python 3.12 (for local scripts/hooks)

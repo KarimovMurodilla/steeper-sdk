@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { refreshAccessToken } from "@/api/client";
-import type { WSDownlinkEnvelope, WSUplinkMessage } from "@/types/ws";
+import type { WSDownlinkEnvelope, WSTopic, WSUplinkMessage } from "@/types/ws";
 
 type MessageHandler = (envelope: WSDownlinkEnvelope) => void;
 
@@ -14,7 +14,9 @@ export function useWebSocket(onMessage: MessageHandler) {
   const pingRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const reconnectRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const reconnectDelay = useRef(RECONNECT_BASE_MS);
-  const subscriptionsRef = useRef<Set<string>>(new Set());
+  // Keyed by target so a re-subscribe after a reconnect can be replayed
+  // verbatim, topic included.
+  const subscriptionsRef = useRef<Map<string, WSUplinkMessage>>(new Map());
   const mountedRef = useRef(true);
 
   // Keep the latest handler in a ref so the socket lifecycle does not depend on
@@ -55,13 +57,8 @@ export function useWebSocket(onMessage: MessageHandler) {
         }
       }, PING_INTERVAL_MS);
 
-      subscriptionsRef.current.forEach((key) => {
-        const sep = key.indexOf(":");
-        const type = key.slice(0, sep);
-        const id = key.slice(sep + 1);
-        if (type && id) {
-          ws.send(JSON.stringify({ action: "subscribe", [type]: id }));
-        }
+      subscriptionsRef.current.forEach((msg) => {
+        ws.send(JSON.stringify(msg));
       });
     };
 
@@ -105,19 +102,28 @@ export function useWebSocket(onMessage: MessageHandler) {
   }, [getWsUrl]);
 
   const subscribe = useCallback(
-    (type: "chat_id" | "bot_id", id: string) => {
-      const key = `${type}:${id}`;
-      subscriptionsRef.current.add(key);
-      send({ action: "subscribe", [type]: id } as WSUplinkMessage);
+    (type: "chat_id" | "bot_id", id: string, topic?: WSTopic) => {
+      const key = `${type}:${topic ?? ""}:${id}`;
+      const msg = {
+        action: "subscribe",
+        [type]: id,
+        ...(topic ? { topic } : {}),
+      } as WSUplinkMessage;
+      subscriptionsRef.current.set(key, msg);
+      send(msg);
     },
     [send],
   );
 
   const unsubscribe = useCallback(
-    (type: "chat_id" | "bot_id", id: string) => {
-      const key = `${type}:${id}`;
+    (type: "chat_id" | "bot_id", id: string, topic?: WSTopic) => {
+      const key = `${type}:${topic ?? ""}:${id}`;
       subscriptionsRef.current.delete(key);
-      send({ action: "unsubscribe", [type]: id } as WSUplinkMessage);
+      send({
+        action: "unsubscribe",
+        [type]: id,
+        ...(topic ? { topic } : {}),
+      } as WSUplinkMessage);
     },
     [send],
   );
