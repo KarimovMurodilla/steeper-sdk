@@ -160,6 +160,29 @@ services:
     networks:
       - steeper-network
 
+  # Log storage for logs shipped by bots (see src/system/logs).
+  loki:
+    container_name: steeper-loki
+    image: grafana/loki:3.3.0
+    restart: unless-stopped
+    command: -config.file=/etc/loki/config.yaml
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:3100/ready | grep -q ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    volumes:
+      - ./loki/config.yaml:/etc/loki/config.yaml:ro
+      - loki-data:/loki
+    networks:
+      - steeper-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+
 volumes:
   postgres-data-steeper:
     name: app-postgres-data-steeper
@@ -167,6 +190,8 @@ volumes:
     name: app-redis-data
   celery-state:
     name: app-celery-state
+  loki-data:
+    name: app-loki-data
 
 networks:
   steeper-network:

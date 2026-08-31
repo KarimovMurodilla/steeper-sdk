@@ -221,3 +221,35 @@ export interface ApiErrorDetail {
 export interface ApiError {
   detail: string | ApiErrorDetail[];
 }
+
+// ── Bot logs ──
+
+export type LogLevel = "DEBUG" | "INFO" | "WARNING" | "ERROR" | "CRITICAL";
+
+export interface BotLogViewModel {
+  /**
+   * Record timestamp in Unix nanoseconds. Logs live in Loki, which has no row
+   * identity and paginates by time: this value is both the pagination cursor
+   * and — together with the message — the de-duplication key.
+   */
+  cursor: string;
+  ts: string;
+  level: LogLevel;
+  logger: string;
+  message: string;
+  module: string | null;
+  func: string | null;
+  line: number | null;
+  exc: string | null;
+  extra: Record<string, unknown>;
+}
+
+export interface BotLogQueryParams {
+  limit?: number;
+  cursor?: string;
+  level?: LogLevel[];
+  logger_name?: string;
+  search?: string;
+  since?: string;
+  until?: string;
+}

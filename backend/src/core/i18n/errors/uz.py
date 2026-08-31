@@ -27,6 +27,7 @@ ERROR_TEXTS_UZ: dict[ErrorCode, str] = {
     ErrorCode.WORKSPACE_MEMBER_NOT_FOUND: "Foydalanuvchi ishchi maydoni a'zosi emas.",
     # --- Bot ---
     ErrorCode.BOT_NOT_FOUND: "Bot topilmadi.",
+    ErrorCode.BOT_LOGS_STORAGE_UNAVAILABLE: "Loglar ombori mavjud emas.",
     ErrorCode.BOT_UPDATE_FAILED: "Telegram orqali bot ma'lumotlarini yangilab bo'lmadi.",
     ErrorCode.BOT_REGISTRATION_FAILED: "Telegram'da botni ro'yxatdan o'tkazib bo'lmadi.",
     ErrorCode.BOT_ADMIN_ALREADY_EXISTS: "Foydalanuvchi allaqachon ushbu botning admini.",

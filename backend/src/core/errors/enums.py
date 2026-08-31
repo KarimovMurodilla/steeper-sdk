@@ -34,6 +34,7 @@ class ErrorCode(StrEnum):
 
     # --- Bot ---
     BOT_NOT_FOUND = "bot.not_found"
+    BOT_LOGS_STORAGE_UNAVAILABLE = "bot.logs_storage_unavailable"
     BOT_UPDATE_FAILED = "bot.update_failed"
     BOT_REGISTRATION_FAILED = "bot.registration_failed"
     BOT_ADMIN_ALREADY_EXISTS = "bot.admin_already_exists"

@@ -3,6 +3,7 @@ import {
   MessageSquare,
   Megaphone,
   BarChart3,
+  ScrollText,
   LogOut,
   Menu,
 } from "lucide-react";
@@ -16,6 +17,7 @@ const navItems = [
   { to: "/chats", icon: MessageSquare, label: "Chats" },
   { to: "/broadcasts", icon: Megaphone, label: "Broadcasts" },
   { to: "/metrics", icon: BarChart3, label: "Analytics" },
+  { to: "/logs", icon: ScrollText, label: "Logs" },
 ];
 
 export function Sidebar() {

@@ -4,7 +4,7 @@ from pydantic import ConfigDict, Field
 
 from src.communication.enums import ChatStatus, SenderType
 from src.core.schemas import Base
-from src.realtime.enums import EventType, WSAction
+from src.realtime.enums import EventType, WSAction, WSTopic
 
 
 class WSUplinkMessage(Base):
@@ -28,6 +28,15 @@ class WSUplinkMessage(Base):
         description="Bot ID if relevant to the action",
         examples=["123e4567-e89b-12d3-a456-426614174001"],
     )
+    topic: WSTopic | None = Field(
+        None,
+        description=(
+            "Optional stream to (un)subscribe to alongside bot_id. Only 'logs' "
+            "exists today; it is opt-in because log traffic is far denser than "
+            "chat traffic and must not reach panels that did not ask for it."
+        ),
+        examples=[WSTopic.LOGS],
+    )
 
 
 class WSDownlinkEnvelope(Base):
@@ -42,8 +51,10 @@ class WSDownlinkEnvelope(Base):
     bot_id: str = Field(
         ..., description="Bot ID", examples=["123e4567-e89b-12d3-a456-426614174001"]
     )
-    chat_id: str = Field(
-        ..., description="Chat ID", examples=["123e4567-e89b-12d3-a456-426614174000"]
+    chat_id: str | None = Field(
+        None,
+        description="Chat ID; null for events that are not tied to a chat (e.g. bot logs)",
+        examples=["123e4567-e89b-12d3-a456-426614174000"],
     )
     timestamp: int = Field(..., description="Unix timestamp", examples=[1610000000])
     data: dict[str, Any] = Field(..., description="Event payload data")

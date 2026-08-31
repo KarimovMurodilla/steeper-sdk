@@ -8,7 +8,7 @@ from redis.asyncio import Redis
 
 from loggers import get_logger
 from src.core.errors.exceptions import UnauthorizedException
-from src.realtime.enums import EventType, WSAction
+from src.realtime.enums import EventType, WSAction, WSTopic
 from src.realtime.manager import ConnectionManager
 from src.realtime.schemas import WSDownlinkEnvelope, WSErrorPayload, WSUplinkMessage
 from src.user.auth.dependencies import verify_jti
@@ -62,7 +62,7 @@ class WebsocketEndpointUseCase:
         envelope = WSDownlinkEnvelope(
             event=EventType.ERROR,
             bot_id="",
-            chat_id="",
+            chat_id=None,
             timestamp=int(time.time()),
             data=error_payload.model_dump(),
         )
@@ -107,7 +107,10 @@ class WebsocketEndpointUseCase:
                     if msg.chat_id:
                         await self.manager.subscribe_chat(websocket, msg.chat_id)
                     if msg.bot_id:
-                        await self.manager.subscribe_bot(websocket, msg.bot_id)
+                        if msg.topic == WSTopic.LOGS:
+                            await self.manager.subscribe_logs(websocket, msg.bot_id)
+                        else:
+                            await self.manager.subscribe_bot(websocket, msg.bot_id)
 
                     if not msg.chat_id and not msg.bot_id:
                         await self._send_error(
@@ -118,7 +121,10 @@ class WebsocketEndpointUseCase:
                     if msg.chat_id:
                         await self.manager.unsubscribe_chat(websocket, msg.chat_id)
                     if msg.bot_id:
-                        await self.manager.unsubscribe_bot(websocket, msg.bot_id)
+                        if msg.topic == WSTopic.LOGS:
+                            await self.manager.unsubscribe_logs(websocket, msg.bot_id)
+                        else:
+                            await self.manager.unsubscribe_bot(websocket, msg.bot_id)
 
                     if not msg.chat_id and not msg.bot_id:
                         await self._send_error(

@@ -13,6 +13,7 @@ from src.main.config import config
 from src.main.sentry import init_sentry
 from src.realtime.broker import broker as realtime_broker
 import src.realtime.consumers  # noqa: F401
+from src.system.logs.dependencies import get_loki_client
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     # Shutdown FastStream broker gracefully
     await realtime_broker.stop()
     logger.info("FastStream RabbitBroker stopped")
+
+    await get_loki_client().aclose()
 
     await on_redis_cache_shutdown()
     await on_redis_shutdown(app)
