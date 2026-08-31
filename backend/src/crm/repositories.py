@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from datetime import datetime
 from typing import Any
 from uuid import UUID
@@ -65,6 +66,26 @@ class TelegramUserRepository(SoftDeleteRepository[TelegramUser]):
 
         result = await session.execute(query)
         return list(result.scalars().all())
+
+    async def resolve_ids(
+        self, session: AsyncSession, bot_id: UUID, tg_user_ids: Sequence[int]
+    ) -> dict[int, UUID]:
+        """Map raw Telegram ids to stored TelegramUser ids, in one query.
+
+        Ids with no stored user are simply absent from the result: callers that
+        record traffic for a user the platform has never seen must keep going
+        rather than fail the batch.
+        """
+        if not tg_user_ids:
+            return {}
+
+        stmt = select(self.model.tg_user_id, self.model.id).where(
+            self.model.bot_id == bot_id,
+            self.model.tg_user_id.in_(set(tg_user_ids)),
+            self.model.is_deleted.is_(False),
+        )
+        rows = (await session.execute(stmt)).all()
+        return {tg_user_id: user_id for tg_user_id, user_id in rows}
 
     async def count_by_bot(self, session: AsyncSession, bot_id: UUID) -> int:
         """Total non-deleted TelegramUsers for a bot."""

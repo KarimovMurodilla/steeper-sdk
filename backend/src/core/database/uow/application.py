@@ -2,6 +2,8 @@ from typing import Any, cast
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.analytics.repositories.bot_event import BotEventRepository
+from src.analytics.repositories.funnel import FunnelRepository
 from src.bot.repositories.bot import BotRepository
 from src.communication.repositories.chat import ChatRepository
 from src.communication.repositories.message import MessageRepository
@@ -82,6 +84,14 @@ class ApplicationUnitOfWork(SQLAlchemyUnitOfWork[R]):
     @property
     def telegram_updates(self) -> TelegramUpdateRepository:
         return self._get_repository(TelegramUpdateRepository)
+
+    @property
+    def bot_events(self) -> BotEventRepository:
+        return self._get_repository(BotEventRepository)
+
+    @property
+    def funnels(self) -> FunnelRepository:
+        return self._get_repository(FunnelRepository)
 
     @property
     def broadcasts(self) -> BroadcastRepository:

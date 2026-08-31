@@ -3,6 +3,7 @@ import {
   MessageSquare,
   Megaphone,
   BarChart3,
+  Filter,
   ScrollText,
   LogOut,
   Menu,
@@ -17,6 +18,7 @@ const navItems = [
   { to: "/chats", icon: MessageSquare, label: "Chats" },
   { to: "/broadcasts", icon: Megaphone, label: "Broadcasts" },
   { to: "/metrics", icon: BarChart3, label: "Analytics" },
+  { to: "/funnels", icon: Filter, label: "Funnels" },
   { to: "/logs", icon: ScrollText, label: "Logs" },
 ];
 

@@ -39,6 +39,9 @@ class ErrorCode(StrEnum):
     BOT_REGISTRATION_FAILED = "bot.registration_failed"
     BOT_ADMIN_ALREADY_EXISTS = "bot.admin_already_exists"
 
+    FUNNEL_NOT_FOUND = "funnel.not_found"
+    FUNNEL_INVALID_DEFINITION = "funnel.invalid_definition"
+
     # --- Marketing ---
     BROADCAST_NOT_FOUND = "broadcast.not_found"
     BROADCAST_ALREADY_LAUNCHED = "broadcast.already_launched"

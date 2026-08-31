@@ -65,3 +65,34 @@ export function humanizeLabel(label: string): string {
     .trim()
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
+
+/**
+ * Format a 0..1 ratio as a percentage.
+ *
+ * Null means "no data to divide by" — a funnel step nobody could convert from —
+ * and must stay visually distinct from a real 0%, which is a measured outcome.
+ */
+export function formatPercent(ratio: number | null, digits = 1): string {
+  if (ratio === null || !Number.isFinite(ratio)) return "—";
+  return `${(ratio * 100).toFixed(digits)}%`;
+}
+
+/** Format a duration in seconds as a short human string: "2h 14m", "45s". */
+export function formatDuration(seconds: number | null): string {
+  if (seconds === null || !Number.isFinite(seconds)) return "—";
+  if (seconds < 1) return "<1s";
+  if (seconds < 60) return `${Math.round(seconds)}s`;
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    const rest = minutes % 60;
+    return rest ? `${hours}h ${rest}m` : `${hours}h`;
+  }
+
+  const days = Math.floor(hours / 24);
+  const rest = hours % 24;
+  return rest ? `${days}d ${rest}h` : `${days}d`;
+}
