@@ -23,7 +23,7 @@ const LABEL_CHAR_WIDTH = 6.2;
  * categorical palette here would imply a distinction between steps that does
  * not exist — the shrinking width is the whole message.
  */
-const BAND_COLOR = "#5288c1";
+const BAND_COLOR = "rgb(var(--tg-primary))";
 
 /**
  * The funnel itself: one band per step, width proportional to the users who

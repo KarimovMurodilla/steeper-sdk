@@ -7,6 +7,26 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Steeper</title>
+    <!--
+      Resolve the theme before the first paint; the store re-applies the same
+      value once the app boots. Without this the page flashes the dark palette.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("steeper:theme");
+          var resolved =
+            stored === "light" || stored === "dark"
+              ? stored
+              : window.matchMedia("(prefers-color-scheme: light)").matches
+                ? "light"
+                : "dark";
+          document.documentElement.dataset.theme = resolved;
+        } catch (e) {
+          document.documentElement.dataset.theme = "dark";
+        }
+      })();
+    </script>
   </head>
   <body class="bg-tg-bg text-tg-text">
     <div id="root"></div>

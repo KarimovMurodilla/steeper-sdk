@@ -73,12 +73,12 @@ export function BotSwitcher() {
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-left transition-colors hover:bg-white/10"
+        className="flex w-full items-center gap-3 rounded-xl border border-tg-overlay/10 bg-tg-overlay/5 px-3 py-2.5 text-left transition-colors hover:bg-tg-overlay/10"
       >
         {active ? (
           <Avatar name={active.name} size="sm" className="h-9 w-9 text-sm" />
         ) : (
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-tg-text-muted">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-tg-overlay/10 text-tg-text-muted">
             <BotIcon size={18} />
           </span>
         )}
@@ -102,13 +102,13 @@ export function BotSwitcher() {
       {open && (
         <>
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-          <div className="absolute bottom-full left-0 z-40 mb-2 w-full overflow-hidden rounded-2xl border border-white/10 bg-tg-bg/95 py-1.5 shadow-2xl backdrop-blur-[20px] animate-fade-in">
+          <div className="absolute bottom-full left-0 z-40 mb-2 w-full overflow-hidden rounded-2xl border border-tg-overlay/10 bg-tg-bg/95 py-1.5 shadow-2xl backdrop-blur-[20px] animate-fade-in">
             <button
               onClick={() => {
                 setAddOpen(true);
                 setOpen(false);
               }}
-              className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-tg-text transition-colors hover:bg-white/5"
+              className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-tg-text transition-colors hover:bg-tg-overlay/5"
             >
               <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-tg-text-secondary text-tg-text-secondary">
                 <Plus size={18} />
@@ -116,15 +116,15 @@ export function BotSwitcher() {
               Add Bot
             </button>
 
-            {bots.length > 0 && <div className="my-1 h-px bg-white/10" />}
+            {bots.length > 0 && <div className="my-1 h-px bg-tg-overlay/10" />}
 
             <div className="max-h-72 overflow-y-auto">
               {bots.map((bot) => (
                 <div
                   key={bot.id}
                   className={cn(
-                    "group flex items-center gap-3 px-3 py-2 transition-colors hover:bg-white/5",
-                    bot.id === activeBotId && "bg-white/5",
+                    "group flex items-center gap-3 px-3 py-2 transition-colors hover:bg-tg-overlay/5",
+                    bot.id === activeBotId && "bg-tg-overlay/5",
                   )}
                 >
                   <button
@@ -136,7 +136,8 @@ export function BotSwitcher() {
                       size="sm"
                       className={cn(
                         "h-9 w-9 text-sm",
-                        bot.id === activeBotId && "ring-2 ring-tg-accent ring-offset-2 ring-offset-tg-bg",
+                        bot.id === activeBotId &&
+                          "ring-2 ring-tg-accent ring-offset-2 ring-offset-tg-bg",
                       )}
                     />
                     <span className="min-w-0 flex-1">
@@ -154,6 +155,7 @@ export function BotSwitcher() {
                         role="button"
                         tabIndex={0}
                         title="Copy bot ID"
+                        aria-label="Copy bot ID"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleCopyId(bot.id);
@@ -184,7 +186,7 @@ export function BotSwitcher() {
                     <button
                       onClick={() => handleToggle(bot)}
                       title={bot.status === "active" ? "Disable" : "Enable"}
-                      className="rounded-lg p-1.5 text-tg-text-muted hover:bg-white/10 hover:text-tg-text"
+                      className="rounded-lg p-1.5 text-tg-text-muted hover:bg-tg-overlay/10 hover:text-tg-text"
                     >
                       <Power size={14} />
                     </button>
@@ -194,14 +196,16 @@ export function BotSwitcher() {
                         setOpen(false);
                       }}
                       title="Edit token"
-                      className="rounded-lg p-1.5 text-tg-text-muted hover:bg-white/10 hover:text-tg-text"
+                      aria-label="Edit token"
+                      className="rounded-lg p-1.5 text-tg-text-muted hover:bg-tg-overlay/10 hover:text-tg-text"
                     >
                       <Pencil size={14} />
                     </button>
                     <button
                       onClick={() => handleDelete(bot)}
                       title="Delete"
-                      className="rounded-lg p-1.5 text-tg-text-muted hover:bg-white/10 hover:text-tg-red"
+                      aria-label="Delete bot"
+                      className="rounded-lg p-1.5 text-tg-text-muted hover:bg-tg-overlay/10 hover:text-tg-red"
                     >
                       <Trash2 size={14} />
                     </button>

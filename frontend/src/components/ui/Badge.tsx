@@ -11,7 +11,7 @@ const variants = {
   warning: "bg-tg-orange/20 text-tg-orange",
   danger: "bg-tg-red/20 text-tg-red",
   info: "bg-tg-primary/20 text-tg-accent",
-  neutral: "bg-white/10 text-tg-text-secondary",
+  neutral: "bg-tg-overlay/10 text-tg-text-secondary",
 };
 
 export function Badge({ variant = "neutral", children, className }: Props) {

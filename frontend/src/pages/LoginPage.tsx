@@ -4,8 +4,10 @@ import { useAuthStore } from "@/store/authStore";
 import { useLogin } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function LoginPage() {
+  useDocumentTitle("Sign in");
   const { isAuthenticated } = useAuthStore();
   const loginMutation = useLogin();
 
@@ -26,7 +28,7 @@ export function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <img
-            src="/favicon.png"
+            src="/logo.png"
             alt="Steeper"
             className="mx-auto mb-4 h-16 w-16 rounded-full shadow-lg shadow-tg-primary/30"
           />
@@ -36,7 +38,7 @@ export function LoginPage() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-[20px] p-6 shadow-xl">
+        <div className="rounded-2xl border border-tg-overlay/10 bg-tg-overlay/5 backdrop-blur-[20px] p-6 shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               label="Login"

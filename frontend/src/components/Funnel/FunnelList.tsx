@@ -52,7 +52,7 @@ export function FunnelList({
                   e.stopPropagation();
                   onEdit(funnel);
                 }}
-                className="rounded-lg p-1.5 text-tg-text-muted transition-colors hover:bg-white/10 hover:text-tg-text"
+                className="rounded-lg p-1.5 text-tg-text-muted transition-colors hover:bg-tg-overlay/10 hover:text-tg-text"
               >
                 <Pencil size={14} />
               </button>
@@ -70,7 +70,7 @@ export function FunnelList({
                   }
                   remove.mutate(funnel.id);
                 }}
-                className="rounded-lg p-1.5 text-tg-text-muted transition-colors hover:bg-white/10 hover:text-tg-red"
+                className="rounded-lg p-1.5 text-tg-text-muted transition-colors hover:bg-tg-overlay/10 hover:text-tg-red"
               >
                 <Trash2 size={14} />
               </button>

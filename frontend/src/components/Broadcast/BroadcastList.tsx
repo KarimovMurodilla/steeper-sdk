@@ -3,8 +3,9 @@ import { Radio, Clock, Send, BarChart2 } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Spinner } from "@/components/ui/Spinner";
+import { CardListSkeleton, Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
 import {
   useBroadcasts,
   useSendBroadcast,
@@ -30,14 +31,20 @@ interface Props {
 }
 
 export function BroadcastList({ botId }: Props) {
-  const { data, isLoading } = useBroadcasts(botId);
+  const { data, isLoading, isError, refetch } = useBroadcasts(botId);
   const broadcasts = data?.items ?? [];
 
   if (isLoading) {
+    return <CardListSkeleton rows={4} />;
+  }
+
+  if (isError) {
     return (
-      <div className="flex justify-center py-16">
-        <Spinner size="lg" />
-      </div>
+      <ErrorState
+        title="Could not load broadcasts"
+        description="The broadcast list did not load. Retry in a moment."
+        onRetry={() => refetch()}
+      />
     );
   }
 
@@ -123,8 +130,10 @@ function BroadcastRowStats({ broadcastId }: { broadcastId: string }) {
 
   if (isLoading) {
     return (
-      <div className="mt-4 flex justify-center border-t border-white/5 pt-4">
-        <Spinner />
+      <div className="mt-4 grid grid-cols-3 gap-3 border-t border-tg-overlay/5 pt-4">
+        <Skeleton className="h-10" />
+        <Skeleton className="h-10" />
+        <Skeleton className="h-10" />
       </div>
     );
   }
@@ -132,7 +141,7 @@ function BroadcastRowStats({ broadcastId }: { broadcastId: string }) {
   if (!data) return null;
 
   return (
-    <div className="mt-4 grid grid-cols-3 gap-3 border-t border-white/5 pt-4">
+    <div className="mt-4 grid grid-cols-3 gap-3 border-t border-tg-overlay/5 pt-4">
       <StatBox label="Total" value={data.total} color="text-tg-accent" />
       <StatBox label="Sent" value={data.sent} color="text-tg-green" />
       <StatBox label="Failed" value={data.failed} color="text-tg-red" />
@@ -150,7 +159,7 @@ function StatBox({
   color: string;
 }) {
   return (
-    <div className="rounded-xl border border-white/5 bg-white/5 p-3 text-center">
+    <div className="rounded-xl border border-tg-overlay/5 bg-tg-overlay/5 p-3 text-center">
       <p className={`text-xl font-bold ${color}`}>{value.toLocaleString()}</p>
       <p className="mt-1 text-xs text-tg-text-muted">{label}</p>
     </div>

@@ -96,3 +96,32 @@ export function formatDuration(seconds: number | null): string {
   const rest = hours % 24;
   return rest ? `${days}d ${rest}h` : `${days}d`;
 }
+
+/** True when both timestamps fall on the same calendar day, local time. */
+export function isSameDay(a: string, b: string): boolean {
+  const x = new Date(a);
+  const y = new Date(b);
+  return (
+    x.getFullYear() === y.getFullYear() &&
+    x.getMonth() === y.getMonth() &&
+    x.getDate() === y.getDate()
+  );
+}
+
+/** Label for a day separator in the message feed: "Today", "Yesterday", date. */
+export function formatDaySeparator(iso: string): string {
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+
+  if (isSameDay(iso, now.toISOString())) return "Today";
+  if (isSameDay(iso, yesterday.toISOString())) return "Yesterday";
+
+  const d = new Date(iso);
+  const sameYear = d.getFullYear() === now.getFullYear();
+  return d.toLocaleDateString([], {
+    day: "numeric",
+    month: "long",
+    ...(sameYear ? {} : { year: "numeric" }),
+  });
+}

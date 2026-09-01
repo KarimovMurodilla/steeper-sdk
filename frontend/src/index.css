@@ -3,9 +3,62 @@
 @tailwind utilities;
 
 @layer base {
+  /*
+   * Palette as raw RGB channels so Tailwind's alpha modifiers (bg-tg-primary/15)
+   * keep working: every colour is declared as rgb(var(--x) / <alpha-value>).
+   * `--tg-overlay` is the tint used for hairlines and hover fills — white on
+   * the dark theme, black on the light one.
+   */
+  :root,
+  [data-theme="dark"] {
+    color-scheme: dark;
+
+    --tg-bg: 23 33 43;
+    --tg-bg-secondary: 14 22 33;
+    --tg-bg-sidebar: 14 22 33;
+    --tg-surface: 24 37 51;
+    --tg-surface-hover: 30 47 64;
+    --tg-primary: 82 136 193;
+    --tg-primary-hover: 107 160 214;
+    --tg-accent: 100 181 239;
+    --tg-text: 245 245 245;
+    --tg-text-secondary: 126 145 158;
+    --tg-text-muted: 84 103 120;
+    --tg-border: 27 42 58;
+    --tg-msg-out: 43 82 120;
+    --tg-msg-in: 24 37 51;
+    --tg-green: 79 174 78;
+    --tg-red: 229 57 53;
+    --tg-orange: 245 166 35;
+    --tg-overlay: 255 255 255;
+  }
+
+  [data-theme="light"] {
+    color-scheme: light;
+
+    --tg-bg: 255 255 255;
+    --tg-bg-secondary: 244 247 250;
+    --tg-bg-sidebar: 244 247 250;
+    --tg-surface: 255 255 255;
+    --tg-surface-hover: 234 240 246;
+    --tg-primary: 47 106 168;
+    --tg-primary-hover: 36 88 143;
+    --tg-accent: 29 92 155;
+    --tg-text: 17 27 37;
+    --tg-text-secondary: 91 111 128;
+    --tg-text-muted: 129 146 161;
+    --tg-border: 214 224 233;
+    --tg-msg-out: 205 228 249;
+    --tg-msg-in: 240 243 247;
+    --tg-green: 47 138 46;
+    --tg-red: 197 42 38;
+    --tg-orange: 176 112 12;
+    --tg-overlay: 17 27 37;
+  }
+
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+    scrollbar-color: rgb(var(--tg-overlay) / 0.15) transparent;
   }
 
   *::-webkit-scrollbar {
@@ -17,33 +70,45 @@
   }
 
   *::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgb(var(--tg-overlay) / 0.15);
     border-radius: 3px;
   }
 
   *::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgb(var(--tg-overlay) / 0.25);
   }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-      "Helvetica Neue", Arial, sans-serif;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+      Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: rgb(var(--tg-bg));
+    color: rgb(var(--tg-text));
   }
 
   ::selection {
-    background-color: rgba(82, 136, 193, 0.4);
-  }
-
-  input,
-  textarea,
-  select {
-    color-scheme: dark;
+    background-color: rgb(var(--tg-primary) / 0.4);
   }
 
   select option {
-    background-color: #17212b;
-    color: #f5f5f5;
+    background-color: rgb(var(--tg-bg));
+    color: rgb(var(--tg-text));
+  }
+
+  /*
+   * Respect the OS "reduce motion" setting: the app's slide/fade entrances and
+   * hover scaling are decoration, never information.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }

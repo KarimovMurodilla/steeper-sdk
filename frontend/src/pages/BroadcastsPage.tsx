@@ -4,10 +4,12 @@ import { useActiveBot } from "@/hooks/useActiveBot";
 import { BroadcastList } from "@/components/Broadcast/BroadcastList";
 import { CreateBroadcastModal } from "@/components/Broadcast/CreateBroadcastModal";
 import { Button } from "@/components/ui/Button";
-import { Spinner } from "@/components/ui/Spinner";
+import { CardListSkeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function BroadcastsPage() {
+  useDocumentTitle("Broadcasts");
   const { activeBotId, bots, isLoading } = useActiveBot();
   const activeBot = bots.find((b) => b.id === activeBotId) ?? null;
   const [createOpen, setCreateOpen] = useState(false);
@@ -30,9 +32,7 @@ export function BroadcastsPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-16">
-          <Spinner size="lg" />
-        </div>
+        <CardListSkeleton rows={4} />
       ) : !activeBot ? (
         <EmptyState
           icon={Bot}

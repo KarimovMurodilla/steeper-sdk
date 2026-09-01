@@ -119,7 +119,7 @@ export function FunnelFormModal({ botId, open, onClose, funnel }: Props) {
                 className={
                   windowSeconds === option.value
                     ? "rounded-lg bg-tg-primary/20 px-3 py-1.5 text-xs font-medium text-tg-accent"
-                    : "rounded-lg px-3 py-1.5 text-xs font-medium text-tg-text-secondary hover:bg-white/5"
+                    : "rounded-lg px-3 py-1.5 text-xs font-medium text-tg-text-secondary hover:bg-tg-overlay/5"
                 }
               >
                 {option.label}

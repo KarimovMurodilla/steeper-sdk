@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Filter, TrendingDown } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Spinner } from "@/components/ui/Spinner";
+import { ChartSkeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FunnelChart } from "./FunnelChart";
 import { useFunnelReport } from "@/hooks/useFunnels";
@@ -47,7 +47,7 @@ export function FunnelReportView({ botId, funnel }: Props) {
                 "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
                 rangeKey === range.key
                   ? "bg-tg-primary/20 text-tg-accent"
-                  : "text-tg-text-secondary hover:bg-white/5",
+                  : "text-tg-text-secondary hover:bg-tg-overlay/5",
               )}
             >
               {range.label}
@@ -66,7 +66,7 @@ export function FunnelReportView({ botId, funnel }: Props) {
             "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
             matureOnly
               ? "bg-tg-primary/20 text-tg-accent"
-              : "text-tg-text-secondary hover:bg-white/5",
+              : "text-tg-text-secondary hover:bg-tg-overlay/5",
           )}
         >
           <Filter size={13} />
@@ -74,11 +74,7 @@ export function FunnelReportView({ botId, funnel }: Props) {
         </button>
       </div>
 
-      {isLoading && (
-        <div className="flex h-60 items-center justify-center">
-          <Spinner size="lg" />
-        </div>
-      )}
+      {isLoading && <ChartSkeleton />}
 
       {!isLoading && data && data.total_entered === 0 && (
         <EmptyState
@@ -101,7 +97,7 @@ export function FunnelReportView({ botId, funnel }: Props) {
           <GlassCard className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/5 text-left text-xs text-tg-text-muted">
+                <tr className="border-b border-tg-overlay/5 text-left text-xs text-tg-text-muted">
                   <th className="px-4 py-3 font-medium">Step</th>
                   <th className="px-4 py-3 text-right font-medium">Users</th>
                   <th className="px-4 py-3 text-right font-medium">
@@ -125,7 +121,7 @@ export function FunnelReportView({ botId, funnel }: Props) {
                   return (
                     <tr
                       key={`${step.name}-${step.position}`}
-                      className="border-b border-white/5 last:border-0"
+                      className="border-b border-tg-overlay/5 last:border-0"
                     >
                       <td className="px-4 py-3">
                         <span className="mr-2 text-xs text-tg-text-muted">

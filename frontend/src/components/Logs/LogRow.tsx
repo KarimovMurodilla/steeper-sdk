@@ -35,7 +35,7 @@ export function LogRow({ record }: Props) {
   return (
     <div
       className={cn(
-        "border-b border-white/5 font-mono text-xs leading-relaxed hover:bg-white/[0.03]",
+        "border-b border-tg-overlay/5 font-mono text-xs leading-relaxed hover:bg-tg-overlay/[0.03]",
         record.level === "ERROR" || record.level === "CRITICAL"
           ? "bg-tg-red/5"
           : undefined,
@@ -81,7 +81,7 @@ export function LogRow({ record }: Props) {
       </button>
 
       {expanded && (
-        <div className="space-y-2 border-t border-white/5 bg-black/20 px-3 py-2 pl-8">
+        <div className="space-y-2 border-t border-tg-overlay/5 bg-black/20 px-3 py-2 pl-8">
           <div className="text-tg-text-muted">
             {record.logger}
             {record.module && ` · ${record.module}`}
