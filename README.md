@@ -1,116 +1,31 @@
 # Steeper
 
-**Steeper** is a self-hostable platform for running and operating Telegram bots —
-register multiple bots, talk to your users from a live operator panel, send
-broadcasts, and track metrics. It pairs an async **FastAPI** backend with a
-modern **React** operator dashboard, all wired together with a one-command
-Docker stack.
+**Steeper** is a self-hostable platform for running and operating Telegram bots. Register
+multiple bots, talk to your users from a live operator panel, send broadcasts, and track
+metrics. An async FastAPI backend and a React operator dashboard, wired together with a
+one-command Docker stack.
 
 > Connect your bots with the companion [`steeper`](https://github.com/KarimovMurodilla/steeper)
-> Python library — point its middleware at this API and incoming Telegram
-> updates flow straight into the platform.
-
----
-
-## Table of Contents
-
-- [What you get](#what-you-get)
-- [Architecture](#architecture)
-- [Tech stack](#tech-stack)
-- [Repository layout](#repository-layout)
-- [Quick start (development)](#quick-start-development)
-- [Self-host with published images](#self-host-with-published-images)
-- [Connecting a Telegram bot](#connecting-a-telegram-bot)
-- [Services & ports](#services--ports)
-- [Common commands](#common-commands)
-- [CI/CD](#cicd)
-- [Documentation](#documentation)
-- [License](#license)
-
----
+> Python library — point its middleware at this API and incoming Telegram updates flow
+> straight into the platform.
 
 ## What you get
 
-- **Bot management** — register, update, and remove multiple Telegram bots from
-  a global switcher, modelled on Telegram's own account-switching sheet.
-- **Live operator chat** — Telegram webhooks land in the platform; operators
-  reply in real time over WebSockets.
-- **Broadcasts** — compose and dispatch mass messages to your audience via
-  background workers.
-- **Metrics** — track traffic and audience: update and message volume, content and chat breakdowns, an activity heatmap, growth, DAU/WAU/MAU, churn, and languages.
-- **Bot logs** — bots ship their `logging` output to the platform; operators read
-  the live stream and search the history, stored in Loki with its own retention.
-- **Audience records** — every Telegram user who talks to a bot is stored and
-  reused for chat identity, broadcast targeting, and metrics counts. There is
-  no separate CRM UI or API yet.
-- **Auth** — JWT-based operator login with permissions and a super-admin
-  bootstrap script.
-
-## Architecture
-
-This is a monorepo containing two deployable apps that ship as separate Docker
-images and run together behind a single Nginx reverse proxy.
-
-```
-                          ┌──────────────────────────────────────────┐
-   Telegram  ───webhook──▶│  Nginx (:8000)                           │
-   (steeper lib)          │   ├── /v1 ............ backend API + WebSockets
-                          │   ├── /docs, /health . backend (FastAPI :8001)
-   Operator browser ─────▶│   └── / .............. frontend (operator panel)
-                          └──────────────┬───────────────────────────┘
-                                         │
-    ┌───────────┬───────────┬─────────┼─────────┬───────────┬──────────┐
- Postgres     Redis      RabbitMQ    Celery    Flower       Loki
- (data)   (cache/limiter) (broker) (worker+beat)(monitoring)(bot logs)
-```
-
-- **`backend/`** — async FastAPI app with a modular domain structure
-  (`bot`, `communication`, `marketing`, `crm`, `analytics`, `realtime`,
-  `user`, `system`, `core`, `integrations/telegram`). Uses SQLAlchemy (async)
-  with a Unit of Work pattern, Redis caching/rate-limiting, Celery + RabbitMQ for background work,
-  and an async S3 storage adapter.
-- **`frontend/`** — React 19 + Vite + TypeScript operator panel
-  (TanStack Query, Zustand, Tailwind, React Router). Pages: **Chats**,
-  **Broadcasts**, **Metrics**, **Logs**, and **Login**. Bots have no page of their own —
-  adding, selecting, and managing them happens in the sidebar bot switcher,
-  available everywhere in the panel.
-
-## Tech stack
-
-| Layer        | Technologies |
-|--------------|--------------|
-| Backend      | FastAPI, SQLAlchemy (async), Alembic, Pydantic |
-| Frontend     | React 19, Vite 6, TypeScript, TanStack Query, Zustand, Tailwind CSS |
-| Data         | PostgreSQL 18, Redis, Loki (bot logs) |
-| Async / jobs | Celery, RabbitMQ, Flower |
-| Edge         | Nginx (reverse proxy + WebSocket upgrade) |
-| Storage      | S3-compatible object storage (presigned URLs) |
-| Tooling      | Docker Compose, Make, Ruff, mypy, pytest, ESLint |
-
-## Repository layout
-
-```
-steeper/
-├── backend/          # FastAPI application (see backend/README.md)
-│   ├── src/          # Modular domain code (bot, communication, marketing, ...)
-│   ├── migrations/   # Alembic migrations
-│   ├── tests/        # pytest suite
-│   ├── infra/        # Dockerfiles, compose files, nginx, postgres, redis
-│   └── docs/readme/  # Architecture, infra, and contributing docs
-├── frontend/         # React + Vite operator panel
-│   └── src/          # pages, components, api, store, hooks, types
-├── .github/workflows # CI: lint/type/test + publish images to GHCR
-└── Makefile          # Top-level dev & prod orchestration
-```
-
-> The full backend layout and architectural patterns (Unit of Work, UseCase vs
-> Service, repositories) are documented in
-> [`backend/docs/readme/architecture.md`](backend/docs/readme/architecture.md).
+- **Bot management** — register, update, and remove multiple Telegram bots.
+- **Live operator chat** — Telegram webhooks land in the platform; operators reply in real
+  time over WebSockets.
+- **Broadcasts** — compose and dispatch mass messages to your audience.
+- **Metrics** — update and message volume, content and chat breakdowns, an activity
+  heatmap, growth, DAU/WAU/MAU, churn, and languages.
+- **Bot logs** — bots ship their `logging` output to the platform; read the live stream and
+  search the history.
+- **Audience records** — every Telegram user who talks to a bot is stored and reused for
+  chat identity, broadcast targeting, and metrics.
+- **Auth** — JWT-based operator login with permissions and a super-admin bootstrap script.
 
 ## Quick start (development)
 
-**Prerequisites:** Docker + Docker Compose. (Python 3.12 only needed if you run
-backend scripts/hooks locally.)
+**Prerequisites:** Docker + Docker Compose.
 
 ```bash
 # 1. Configure the backend environment
@@ -131,19 +46,15 @@ Then open:
 - **API docs (Swagger):** http://localhost:8000/docs
 - **Flower (task monitor):** http://localhost:5555
 
-To run only the backend in dev mode, use `make run-dev`. Stop everything with
-`make down`; view logs with `make logs`.
+To run only the backend in dev mode, use `make run-dev`. Stop everything with `make down`;
+view logs with `make logs`.
 
 ## Self-host with published images
 
-You don't have to build anything — backend and frontend images are published to
-GHCR and run via a pull-only compose file
-(`backend/infra/docker-compose.prod.yml`). Postgres / Redis / RabbitMQ stay on
-the internal network; only Nginx is exposed on port 8000.
+Backend and frontend images are published to GHCR, so nothing has to be built by hand:
 
-The one image built on the host is Postgres (`backend/infra/postgres/Dockerfile`
-— PostgreSQL 18 plus a custom config and `pg_stat_statements`); `make prod-up`
-takes care of that build for you.
+- `ghcr.io/karimovmurodilla/steeper-backend`
+- `ghcr.io/karimovmurodilla/steeper-frontend`
 
 ```bash
 # 1. Configure environment
@@ -165,86 +76,32 @@ make prod-down
 Open `http://<host>:8000` (operator panel) and `http://<host>:8000/docs` (API).
 **Put a TLS-terminating proxy in front of port 8000 for production.**
 
-Images:
-
-- `ghcr.io/karimovmurodilla/steeper-backend`
-- `ghcr.io/karimovmurodilla/steeper-frontend`
-
-`STEEPER_TAG` selects the version, default `latest` — a rolling tag that follows
-the `main` branch, so `make prod-pull` always fetches the newest build. To stay
-on a fixed release, pin it in **both** commands (or export it once):
-
-```bash
-export STEEPER_TAG=0.1.0
-make prod-pull
-make prod-up
-```
-
-Pulling with one tag and starting with another leaves the old image running.
-
-> The frontend image talks to the API on its own origin (same-origin, behind the
-> bundled Nginx). To bake a different backend URL, rebuild it with
-> `--build-arg VITE_API_BASE_URL=https://api.example.com`.
+`STEEPER_TAG` selects the version, default `latest` (a rolling tag following `main`). To pin
+a release, set it in **both** `make prod-pull` and `make prod-up` — pulling with one tag and
+starting with another leaves the old image running.
 
 ## Connecting a Telegram bot
 
-1. Add a bot in the operator panel's sidebar switcher (**Add Bot** → paste the
-   @BotFather token), or via the API. Click its ID in the switcher to copy the
-   `bot_id`.
+1. Add a bot in the operator panel's sidebar switcher (**Add Bot** → paste the @BotFather
+   token), or via the API. Click its ID in the switcher to copy the `bot_id`.
 2. In your bot built with the [`steeper`](https://github.com/KarimovMurodilla/steeper)
    library, point the middleware's `base_url` at `http://<host>:8000`.
-3. Incoming Telegram updates are forwarded to the platform's webhook endpoint,
-   appear in **Chats**, and operators can reply in real time.
-
-## Services & ports
-
-Dev stack (`docker-compose.yml`). Host ports marked *(env)* come from
-`backend/.env` — the values below are the defaults suggested in `.env.example`.
-
-| Service   | Host port          | Notes                                    |
-|-----------|--------------------|------------------------------------------|
-| Nginx     | 8000               | Public entrypoint, proxies to app:8001   |
-| App       | 8001 *(env)*       | `APP_BACKEND_PORT`, direct, bypass Nginx |
-| Frontend  | 3000               | Vite build served by Nginx, container :80 |
-| Postgres  | 5432 *(env)*       | `POSTGRES_PORT`                          |
-| Redis     | 6379 *(env)*       | `REDIS_PORT`, cache / rate limiter       |
-| RabbitMQ  | 5672 *(env)* / 15672 | `RABBITMQ_PORT` (AMQP) / management UI |
-| Flower    | 5555               | Celery monitoring                        |
-| Loki      | — (internal 3100)  | Bot log storage, not published           |
-
-In production (`docker-compose.prod.yml`) only Nginx publishes a port (8000).
-Postgres, Redis, RabbitMQ, Loki, the app, and Flower stay on the internal network —
-uncomment the `ports` mapping on the `flower` service if you need its UI.
+3. Incoming Telegram updates are forwarded to the platform's webhook endpoint, appear in
+   **Chats**, and operators can reply in real time.
 
 ## Common commands
 
-Run from the repo root (`make info` prints a summary):
+Run from the repo root; `make info` prints the full list.
 
-| Command                     | Description |
-|-----------------------------|-------------|
-| `make run-fullstack-dev`    | Build + start backend, frontend, and infra with hot-reload |
-| `make run-fullstack`        | Build + start the full stack (prod-like) |
-| `make run-dev` / `make run` | Backend only (dev with reload / prod-like) |
-| `make migrate`              | Apply Alembic migrations (`alembic upgrade head`) |
-| `make migration`            | Create a new Alembic revision |
-| `make createsuperuser`      | Create the admin user |
-| `make logs` / `make logs-app` | Tail all services / just the app |
-| `make test`                 | Run the backend test suite (pytest) |
-| `make lint`                 | Auto-fix lint errors and format the backend |
-| `make down` / `make clean`  | Stop the stack / remove containers, volumes, images |
-| `make prod-*`               | Pull-only production stack on published images |
-
-## CI/CD
-
-`.github/workflows/ci.yml` runs on every push and pull request against `main`:
-the backend job runs ruff, mypy, an Alembic single-head check and pytest, while
-the frontend job runs ESLint and a production build.
-
-`.github/workflows/docker-publish.yml` builds and pushes backend and frontend
-images to GHCR using the built-in `GITHUB_TOKEN` (no secrets to configure):
-
-- Push a `vX.Y.Z` tag → publishes `X.Y.Z` and `X.Y` (pinnable release images).
-- Push to `main` → publishes `main`, `sha-<short>`, and `latest` (rolling images).
+| Command                  | Description |
+|--------------------------|-------------|
+| `make run-fullstack-dev` | Build + start backend, frontend, and infra with hot-reload |
+| `make run-dev`           | Backend only, with reload |
+| `make migrate`           | Apply Alembic migrations |
+| `make createsuperuser`   | Create the admin user |
+| `make test`              | Run the backend test suite (pytest) |
+| `make lint`              | Auto-fix lint errors and format the backend |
+| `make down`              | Stop the stack |
 
 ## Documentation
 
