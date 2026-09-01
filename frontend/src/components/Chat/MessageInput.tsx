@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useLayoutEffect } from "react";
 import { Send } from "lucide-react";
 import { useSendMessage } from "@/hooks/useChats";
 import { cn } from "@/lib/utils";
@@ -13,18 +13,22 @@ export function MessageInput({ botId, chatId }: Props) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const mutation = useSendMessage(botId, chatId);
 
+  // Grow the composer with its content up to the CSS max height, then scroll.
+  useLayoutEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [text]);
+
   const handleSend = useCallback(() => {
     const trimmed = text.trim();
-    if (!trimmed || mutation.isPending) return;
-    mutation.mutate(
-      { text: trimmed },
-      {
-        onSuccess: () => {
-          setText("");
-          inputRef.current?.focus();
-        },
-      },
-    );
+    if (!trimmed) return;
+    // The optimistic bubble appears at once, so the composer clears right away
+    // instead of waiting for the round-trip.
+    mutation.mutate({ text: trimmed, clientId: crypto.randomUUID() });
+    setText("");
+    inputRef.current?.focus();
   }, [text, mutation]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -35,7 +39,7 @@ export function MessageInput({ botId, chatId }: Props) {
   };
 
   return (
-    <div className="border-t border-white/5 bg-tg-bg-secondary/80 backdrop-blur-[20px] px-4 py-3">
+    <div className="border-t border-tg-overlay/5 bg-tg-bg-secondary/80 backdrop-blur-[20px] px-4 py-3">
       <div className="flex items-end gap-2">
         <textarea
           ref={inputRef}
@@ -43,15 +47,17 @@ export function MessageInput({ botId, chatId }: Props) {
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Write a message..."
+          aria-label="Message"
           rows={1}
-          className="flex-1 resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-tg-text placeholder:text-tg-text-muted outline-none focus:border-tg-primary transition-colors max-h-32 overflow-y-auto"
+          className="max-h-32 flex-1 resize-none overflow-y-auto rounded-xl border border-tg-overlay/10 bg-tg-overlay/5 px-4 py-2.5 text-sm text-tg-text transition-colors placeholder:text-tg-text-muted outline-none focus:border-tg-primary focus:ring-1 focus:ring-tg-primary/30"
           style={{ minHeight: "40px" }}
         />
         <button
           onClick={handleSend}
-          disabled={!text.trim() || mutation.isPending}
+          disabled={!text.trim()}
+          aria-label="Send message"
           className={cn(
-            "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-colors",
+            "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tg-accent disabled:cursor-not-allowed",
             text.trim()
               ? "bg-tg-primary text-white hover:bg-tg-primary-hover"
               : "text-tg-text-muted",

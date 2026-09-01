@@ -2,8 +2,10 @@ import { Bot } from "lucide-react";
 import { useActiveBot } from "@/hooks/useActiveBot";
 import { MetricsDashboard } from "@/components/Metrics/MetricsDashboard";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function MetricsPage() {
+  useDocumentTitle("Analytics");
   const { activeBotId, bots, isLoading } = useActiveBot();
 
   return (

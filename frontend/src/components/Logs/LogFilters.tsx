@@ -7,7 +7,7 @@ import type { LogLevel } from "@/types/api";
 const LEVELS: LogLevel[] = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"];
 
 const levelActive: Record<LogLevel, string> = {
-  DEBUG: "bg-white/10 text-tg-text",
+  DEBUG: "bg-tg-overlay/10 text-tg-text",
   INFO: "bg-tg-primary/25 text-tg-accent",
   WARNING: "bg-tg-orange/25 text-tg-orange",
   ERROR: "bg-tg-red/25 text-tg-red",
@@ -38,6 +38,13 @@ export function LogFilters({
   const [search, setSearch] = useState(filters.search);
   const [loggerName, setLoggerName] = useState(filters.loggerName);
 
+  // The filters now come from the URL, so history navigation can change them
+  // underneath these inputs.
+  useEffect(() => {
+    setSearch(filters.search);
+    setLoggerName(filters.loggerName);
+  }, [filters.search, filters.loggerName]);
+
   useEffect(() => {
     const id = setTimeout(() => {
       if (search !== filters.search || loggerName !== filters.loggerName) {
@@ -55,7 +62,7 @@ export function LogFilters({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-white/5 bg-tg-bg-secondary/80 px-3 py-2 backdrop-blur-[20px]">
+    <div className="flex flex-wrap items-center gap-2 border-b border-tg-overlay/5 bg-tg-bg-secondary/80 px-3 py-2 backdrop-blur-[20px]">
       <div className="flex items-center gap-1">
         {LEVELS.map((level) => {
           const active = filters.levels.includes(level);
@@ -68,7 +75,7 @@ export function LogFilters({
                 "rounded-md px-2 py-1 font-mono text-[11px] font-semibold transition-colors",
                 active
                   ? levelActive[level]
-                  : "text-tg-text-muted hover:bg-white/5 hover:text-tg-text-secondary",
+                  : "text-tg-text-muted hover:bg-tg-overlay/5 hover:text-tg-text-secondary",
               )}
               aria-pressed={active}
             >
@@ -87,7 +94,7 @@ export function LogFilters({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search message (case-sensitive)"
-          className="w-full rounded-lg border border-white/10 bg-white/5 py-1.5 pl-8 pr-3 text-sm text-tg-text placeholder:text-tg-text-muted outline-none transition-colors focus:border-tg-primary"
+          className="w-full rounded-lg border border-tg-overlay/10 bg-tg-overlay/5 py-1.5 pl-8 pr-3 text-sm text-tg-text placeholder:text-tg-text-muted outline-none transition-colors focus:border-tg-primary"
         />
       </div>
 
@@ -95,7 +102,7 @@ export function LogFilters({
         value={loggerName}
         onChange={(e) => setLoggerName(e.target.value)}
         placeholder="Logger prefix"
-        className="w-40 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 font-mono text-xs text-tg-text placeholder:text-tg-text-muted outline-none transition-colors focus:border-tg-primary"
+        className="w-40 rounded-lg border border-tg-overlay/10 bg-tg-overlay/5 px-3 py-1.5 font-mono text-xs text-tg-text placeholder:text-tg-text-muted outline-none transition-colors focus:border-tg-primary"
       />
 
       <button
@@ -106,7 +113,7 @@ export function LogFilters({
           "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
           paused
             ? "bg-tg-orange/20 text-tg-orange hover:bg-tg-orange/30"
-            : "bg-white/5 text-tg-text-secondary hover:bg-white/10",
+            : "bg-tg-overlay/5 text-tg-text-secondary hover:bg-tg-overlay/10",
         )}
       >
         {paused ? <Play size={14} /> : <Pause size={14} />}
@@ -117,7 +124,8 @@ export function LogFilters({
         type="button"
         onClick={onRefresh}
         title="Reload history"
-        className="rounded-lg bg-white/5 p-1.5 text-tg-text-secondary transition-colors hover:bg-white/10 hover:text-tg-text"
+        aria-label="Reload history"
+        className="rounded-lg bg-tg-overlay/5 p-1.5 text-tg-text-secondary transition-colors hover:bg-tg-overlay/10 hover:text-tg-text"
       >
         <RotateCw size={14} />
       </button>

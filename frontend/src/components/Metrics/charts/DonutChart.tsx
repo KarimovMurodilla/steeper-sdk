@@ -39,7 +39,7 @@ export function DonutChart({ data, size = 160 }: Props) {
             cy={radius}
             r={r}
             fill="none"
-            stroke="rgba(255,255,255,0.05)"
+            stroke="rgb(var(--tg-overlay) / 0.05)"
             strokeWidth={stroke}
           />
           {total > 0 &&

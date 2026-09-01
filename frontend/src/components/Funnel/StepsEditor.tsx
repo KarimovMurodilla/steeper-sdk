@@ -79,7 +79,7 @@ export function StepsEditor({
               onChange={(e) => setStep(i, e.target.value)}
               placeholder={i === 0 ? "e.g. signup" : "event name"}
               className={cn(
-                "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-tg-text placeholder:text-tg-text-muted outline-none transition-colors focus:border-tg-primary focus:ring-1 focus:ring-tg-primary/30",
+                "w-full rounded-lg border border-tg-overlay/10 bg-tg-overlay/5 px-3 py-2 text-sm text-tg-text placeholder:text-tg-text-muted outline-none transition-colors focus:border-tg-primary focus:ring-1 focus:ring-tg-primary/30",
                 unknown(step) && "border-tg-orange/60",
               )}
             />
@@ -158,7 +158,7 @@ function IconButton({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="rounded-lg p-1.5 text-tg-text-muted transition-colors hover:bg-white/10 hover:text-tg-text disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+      className="rounded-lg p-1.5 text-tg-text-muted transition-colors hover:bg-tg-overlay/10 hover:text-tg-text disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
     >
       {children}
     </button>

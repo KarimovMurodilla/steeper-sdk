@@ -21,7 +21,7 @@ export function BarList({ data }: Props) {
               {d.count.toLocaleString()}
             </span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-white/5">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-tg-overlay/5">
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{

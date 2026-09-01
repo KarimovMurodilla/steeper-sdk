@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Activity,
   BarChart3,
@@ -12,8 +13,9 @@ import {
   Zap,
 } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Spinner } from "@/components/ui/Spinner";
+import { ChartSkeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { StatCard } from "./StatCard";
 import { AreaChart } from "./charts/AreaChart";
 import { BarList } from "./charts/BarList";
@@ -77,8 +79,21 @@ function Placeholder({ text, tall }: { text: string; tall?: boolean }) {
 }
 
 export function MetricsDashboard({ botId }: Props) {
-  const [rangeKey, setRangeKey] = useState("7d");
+  // The selected range lives in the URL so a view can be linked and survives a
+  // reload.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const rangeKey = searchParams.get("range") ?? "7d";
   const range = RANGES.find((r) => r.key === rangeKey) ?? RANGES[1]!;
+
+  const setRangeKey = useCallback(
+    (key: string) => {
+      const next = new URLSearchParams(searchParams);
+      if (key === "7d") next.delete("range");
+      else next.set("range", key);
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
 
   const params = useMemo(
     () => ({
@@ -88,14 +103,18 @@ export function MetricsDashboard({ botId }: Props) {
     [range.days, range.granularity],
   );
 
-  const { data: traffic, isLoading: trafficLoading } = useBotTrafficMetrics(
-    botId,
-    params,
-  );
-  const { data: audience, isLoading: audienceLoading } = useBotAudienceMetrics(
-    botId,
-    params,
-  );
+  const {
+    data: traffic,
+    isLoading: trafficLoading,
+    isError: trafficError,
+    refetch: refetchTraffic,
+  } = useBotTrafficMetrics(botId, params);
+  const {
+    data: audience,
+    isLoading: audienceLoading,
+    isError: audienceError,
+    refetch: refetchAudience,
+  } = useBotAudienceMetrics(botId, params);
 
   if (!botId) {
     return (
@@ -108,17 +127,46 @@ export function MetricsDashboard({ botId }: Props) {
     );
   }
 
+  if (trafficError && audienceError) {
+    return (
+      <ErrorState
+        title="Could not load metrics"
+        description="Neither traffic nor audience data came back. Retry in a moment."
+        onRetry={() => {
+          refetchTraffic();
+          refetchAudience();
+        }}
+        className="py-24"
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {(trafficError || audienceError) && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-tg-red/30 bg-tg-red/10 px-4 py-3 text-sm text-tg-text">
+          <span>
+            {trafficError ? "Traffic" : "Audience"} data failed to load; the
+            panels below are incomplete.
+          </span>
+          <button
+            onClick={() => (trafficError ? refetchTraffic() : refetchAudience())}
+            className="flex-shrink-0 rounded-md border border-tg-overlay/10 px-3 py-1 text-xs font-medium transition-colors hover:bg-tg-overlay/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tg-accent"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       <div className="flex justify-end">
-        <div className="flex rounded-lg border border-white/10 bg-white/5 p-0.5">
+        <div className="flex rounded-lg border border-tg-overlay/10 bg-tg-overlay/5 p-0.5">
           {RANGES.map((r) => (
             <button
               key={r.key}
               onClick={() => setRangeKey(r.key)}
               className={cn(
                 "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-                r.key === rangeKey
+                r.key === range.key
                   ? "bg-tg-primary text-white"
                   : "text-tg-text-secondary hover:text-tg-text",
               )}
@@ -203,9 +251,7 @@ export function MetricsDashboard({ botId }: Props) {
 
         <Panel title="Update volume" hint="Telegram updates received over time">
           {trafficLoading ? (
-            <div className="flex h-60 items-center justify-center">
-              <Spinner />
-            </div>
+            <ChartSkeleton />
           ) : traffic && traffic.timeseries.length > 0 ? (
             <AreaChart
               data={traffic.timeseries}
@@ -218,9 +264,7 @@ export function MetricsDashboard({ botId }: Props) {
 
         <Panel title="Activity by hour" hint="Weekday and hour of day, local time">
           {trafficLoading ? (
-            <div className="flex h-60 items-center justify-center">
-              <Spinner />
-            </div>
+            <ChartSkeleton />
           ) : traffic && traffic.heatmap.length > 0 ? (
             <Heatmap data={traffic.heatmap} />
           ) : (
@@ -297,9 +341,7 @@ export function MetricsDashboard({ botId }: Props) {
 
         <Panel title="New users" hint="First seen inside the selected range">
           {audienceLoading ? (
-            <div className="flex h-60 items-center justify-center">
-              <Spinner />
-            </div>
+            <ChartSkeleton />
           ) : audience && audience.new_users_timeseries.length > 0 ? (
             <AreaChart
               data={audience.new_users_timeseries}

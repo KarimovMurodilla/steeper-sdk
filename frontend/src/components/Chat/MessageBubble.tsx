@@ -20,7 +20,7 @@ export function MessageBubble({ message }: Props) {
           "max-w-[75%] rounded-2xl px-4 py-2 shadow-sm",
           isOutgoing
             ? "rounded-br-md bg-tg-msg-out"
-            : "rounded-bl-md bg-tg-msg-in border border-white/5",
+            : "rounded-bl-md bg-tg-msg-in border border-tg-overlay/5",
         )}
       >
         {message.sender === "system" && (

@@ -67,7 +67,7 @@ export function CreateBroadcastModal({ open, onClose, bot }: Props) {
             placeholder="Enter broadcast message..."
             rows={4}
             autoFocus
-            className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-tg-text placeholder:text-tg-text-muted outline-none focus:border-tg-primary transition-colors resize-none"
+            className="w-full rounded-lg border border-tg-overlay/10 bg-tg-overlay/5 px-4 py-2.5 text-sm text-tg-text placeholder:text-tg-text-muted outline-none focus:border-tg-primary transition-colors resize-none"
           />
         </div>
 

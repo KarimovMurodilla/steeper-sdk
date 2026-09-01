@@ -15,7 +15,7 @@ export function StatCard({ label, value, icon: Icon, color, hint }: Props) {
     <GlassCard className="p-4">
       <div className="flex items-center gap-3">
         <div
-          className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-white/5 ${color}`}
+          className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-tg-overlay/5 ${color}`}
         >
           <Icon size={20} />
         </div>

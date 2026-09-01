@@ -2,8 +2,10 @@ import { Bot } from "lucide-react";
 import { useActiveBot } from "@/hooks/useActiveBot";
 import { LogViewer } from "@/components/Logs/LogViewer";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function LogsPage() {
+  useDocumentTitle("Logs");
   const { activeBotId, bots, isLoading } = useActiveBot();
 
   if (!isLoading && bots.length === 0) {

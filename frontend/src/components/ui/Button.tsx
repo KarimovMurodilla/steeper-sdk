@@ -23,11 +23,11 @@ export const Button = forwardRef<HTMLButtonElement, Props>(
   ) => {
     const variants = {
       primary:
-        "bg-tg-primary text-white hover:bg-tg-primary-hover active:scale-[0.98]",
+        "bg-tg-primary text-white hover:bg-tg-primary-hover active:scale-[0.98] motion-reduce:active:scale-100",
       secondary:
-        "bg-white/5 text-tg-text hover:bg-white/10 border border-white/10",
-      danger: "bg-tg-red/90 text-white hover:bg-tg-red active:scale-[0.98]",
-      ghost: "text-tg-text-secondary hover:bg-white/5 hover:text-tg-text",
+        "bg-tg-overlay/5 text-tg-text hover:bg-tg-overlay/10 border border-tg-overlay/10",
+      danger: "bg-tg-red/90 text-white hover:bg-tg-red active:scale-[0.98] motion-reduce:active:scale-100",
+      ghost: "text-tg-text-secondary hover:bg-tg-overlay/5 hover:text-tg-text",
     };
 
     const sizes = {
@@ -41,7 +41,7 @@ export const Button = forwardRef<HTMLButtonElement, Props>(
         ref={ref}
         disabled={disabled || loading}
         className={cn(
-          "inline-flex items-center justify-center gap-2 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+          "inline-flex items-center justify-center gap-2 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tg-accent focus-visible:ring-offset-2 focus-visible:ring-offset-tg-bg",
           variants[variant],
           sizes[size],
           className,

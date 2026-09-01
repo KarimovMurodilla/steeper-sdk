@@ -60,7 +60,7 @@ export function AreaChart({
   data,
   granularity,
   height = 240,
-  color = "#5288c1",
+  color = "rgb(var(--tg-primary))",
 }: Props) {
   const [ref, width] = useElementWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
@@ -137,7 +137,7 @@ export function AreaChart({
                   y1={y}
                   x2={width - pad.right}
                   y2={y}
-                  stroke="rgba(255,255,255,0.06)"
+                  stroke="rgb(var(--tg-overlay) / 0.06)"
                   strokeWidth={1}
                 />
                 <text
@@ -196,7 +196,7 @@ export function AreaChart({
                 y1={pad.top}
                 x2={hoverPoint.x}
                 y2={pad.top + innerH}
-                stroke="rgba(255,255,255,0.2)"
+                stroke="rgb(var(--tg-overlay) / 0.2)"
                 strokeWidth={1}
               />
               <circle
@@ -204,7 +204,7 @@ export function AreaChart({
                 cy={hoverPoint.y}
                 r={4}
                 fill={color}
-                stroke="#0e1621"
+                stroke="rgb(var(--tg-bg-secondary))"
                 strokeWidth={2}
               />
             </>
@@ -214,7 +214,7 @@ export function AreaChart({
 
       {hoverPoint && (
         <div
-          className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-lg border border-white/10 bg-tg-bg/95 px-2.5 py-1.5 text-center shadow-xl backdrop-blur-[20px]"
+          className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-lg border border-tg-overlay/10 bg-tg-bg/95 px-2.5 py-1.5 text-center shadow-xl backdrop-blur-[20px]"
           style={{
             left: Math.min(Math.max(hoverPoint.x, 60), width - 60),
             top: hoverPoint.y - 8,

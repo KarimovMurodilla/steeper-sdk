@@ -2,17 +2,25 @@ import { useEffect, useState } from "react";
 import { Filter, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Spinner } from "@/components/ui/Spinner";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { CardListSkeleton } from "@/components/ui/Skeleton";
 import { FunnelFormModal } from "@/components/Funnel/FunnelFormModal";
 import { FunnelList } from "@/components/Funnel/FunnelList";
 import { FunnelReportView } from "@/components/Funnel/FunnelReportView";
 import { useActiveBot } from "@/hooks/useActiveBot";
 import { useFunnels } from "@/hooks/useFunnels";
 import type { FunnelViewModel } from "@/types/api";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function FunnelsPage() {
+  useDocumentTitle("Funnels");
   const { activeBotId, bots, isLoading: botsLoading } = useActiveBot();
-  const { data: funnels, isLoading } = useFunnels(activeBotId);
+  const {
+    data: funnels,
+    isLoading,
+    isError,
+    refetch,
+  } = useFunnels(activeBotId);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -72,13 +80,17 @@ export function FunnelsPage() {
         />
       )}
 
-      {activeBotId && isLoading && (
-        <div className="flex h-60 items-center justify-center">
-          <Spinner size="lg" />
-        </div>
+      {activeBotId && isLoading && <CardListSkeleton rows={3} />}
+
+      {activeBotId && isError && (
+        <ErrorState
+          title="Could not load funnels"
+          description="The funnel list did not load. Retry in a moment."
+          onRetry={() => refetch()}
+        />
       )}
 
-      {activeBotId && !isLoading && funnels?.length === 0 && (
+      {activeBotId && !isLoading && !isError && funnels?.length === 0 && (
         <EmptyState
           icon={Filter}
           title="No funnels yet"
